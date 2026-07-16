@@ -16,25 +16,22 @@
     <!-- 4. Initialize the Slider -->
     <script>
         $(document).ready(function(){
-            $('.bxslider').bxSlider({
-                mode: 'horizontal', // Transition mode ('horizontal', 'vertical', 'fade')
-                speed: 500,         // Slide transition speed in ms
-                captions: true,     // Enable image title captions
-                auto: true          // Slideshow starts automatically
-            });
-        });
+    $('.bxslider').bxSlider({
+      mode: 'fade',
+      captions: true,
+      slideWidth: 600
+    });
+  });
     </script>
 </head>
 <body>
 
-    <div class="slider-container" style="max-width: 800px; margin: 0 auto;">
-        <!-- The slider markup uses an unordered list -->
-        <ul class="bxslider">
-            <li><img src='images (19).jpeg' title="Caption for Image 1"></li>
-            <li><img src='images (19).jpeg' title="Caption for Image 2"></li>
-            <li><img src='images (19).jpeg' title="Caption for Image 3"></li>
-        </ul>
-    </div>
+<div class="bxslider">
+  <div><img src='images (19).jpeg' title="Coffee 1" /></div>
+  <div><img src='images (19).jpeg' title="Coffee 2" /></div>
+  <div><img src='images (19).jpeg' title="Coffee 3" /></div>
+</div>
+
 
 </body>
 </html>
