@@ -4,8 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Site no GitHub</title>
+<link rel="stylesheet" href="css/index.css" type="text/css" />
+        <link rel="stylesheet" href="css/jquery.lightbox-0.5.css" type="text/css" />
+        <script type="text/javascript" src="js/jquery-1.8.3.min.js"></script>
+        <script type="text/javascript" src="js/jquery-ui-1.9.2.custom.min.js"></script>
+        <script type="text/javascript" src="js/jquery.lightbox-0.5.min.js"></script>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                $('.album').click(function() {
+                    var link = this.id; 
+                    $('article').empty();
+                    var agora = new Date();
+                    $('article').load('./'+link+'.html?time='+agora.getTime(),function(){
+                        $('aside').hide("slide", { direction: "left" }, 1000);
+                    });
+                });
+                $('article a').lightBox();
+            });
+        </script>
+
+
 </head>
 <body>
+
+<div id="geral">
+            <header>
+                <div id="titulo">Galeria de Fotos</div>
+            </header>
+            <section>
+                <aside>
+                    <h2>Escolha o álbum</h2>
+                    <nav>
+                        <ul>
+                            <li><a href="#a1"><div id="a1" class="album"><span>Álbum 1</span></div></a></li>
+                         </ul>
+                    </nav>
+                </aside>
+                <article>
+                    <ul>
+                        <li class='foto'><a href='imgs/a1/fotos/foto_1.jpg'><img src='images (19).jpeg' title='foto_1.jpg'/></a></li>
+                        <li class='foto'><a href='imgs/a1/fotos/foto_2.jpg'><img src='images (19).jpeg' title='foto_2.jpg'/></a></li>
+                        <li class='foto'><a href='imgs/a1/fotos/foto_3.jpg'><img src='images (19).jpeg' title='foto_2.jpg'/></a></li>
+                    </ul>
+                </article>
+            </section>
+        </div>
+
+    
     <h1>Olá, mundo!</h1>
     <p>Bem-vindo ao meu site hospedado no GitHub Pages!</p>
 <img src='gw_hura_05_m.webp' alt="Desddd of the image">
