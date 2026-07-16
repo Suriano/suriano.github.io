@@ -6,6 +6,17 @@
     <script src="https://cdn.jsdelivr.net/npm/bxslider@4.2.17/dist/jquery.bxslider.min.js"></script>
 
     <script>
+
+$('.bxslider').bxSlider({
+    auto: true,
+    autoControls: true,
+    stopAutoOnClick: true,
+    pager: true,
+    slideWidth: 600
+  });
+
+
+      
       $(document).ready(function(){
         $(".slider").bxSlider();
       });
@@ -14,10 +25,11 @@
   </head>
   <body>
 
-    <div class="slider">
-      <div>I am a slide.</div>
-      <div>I am another slide.</div>
-    </div>
+    <div class="bxslider">
+  <div><img src="/assets/coffee1-7325690f507d48962d312be15d9d8929be4a5ff04d184d5ed0a96c1b27940260.jpg" /></div>
+  <div><img src="/assets/coffee2-8bb17517b21cc5b38f3ea7d14cfc4b4c82cc51b99e82bfc3a6d02688ab6c5988.jpg" /></div>
+  <div><img src="/assets/coffee3-02c76c3b922183d7c5144e6856065ad68834ddc7ab5367481a225c516a308cb8.jpg" /></div>
+</div>
 
   </body>
 </html>
