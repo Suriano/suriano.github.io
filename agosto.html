@@ -312,7 +312,40 @@
     let streets = ["Rua Margarida", "Rua Camélia"];
     let assignments = {};
 
-    // Salva o estado atual no localStorage
+    // Variaveis de controle do Auto-Scroll
+    let scrollInterval = null;
+    const scrollThreshold = 100; // Margem de ativacão em pixels nas bordas da tela
+    const scrollSpeed = 16;      // Velocidade do deslocamento da tela
+
+    function handleAutoScroll(e) {
+      if (e.clientY === 0) return; // Evita disparos falsos quando o evento reinicia
+
+      const windowHeight = window.innerHeight;
+      const distanceFromBottom = windowHeight - e.clientY;
+      const distanceFromTop = e.clientY;
+
+      stopAutoScroll();
+
+      if (distanceFromBottom < scrollThreshold && distanceFromBottom > 0) {
+        // Rola a janela para baixo
+        scrollInterval = setInterval(() => {
+          window.scrollBy(0, scrollSpeed);
+        }, 16);
+      } else if (distanceFromTop < scrollThreshold && distanceFromTop > 0) {
+        // Rola a janela para cima
+        scrollInterval = setInterval(() => {
+          window.scrollBy(0, -scrollSpeed);
+        }, 16);
+      }
+    }
+
+    function stopAutoScroll() {
+      if (scrollInterval) {
+        clearInterval(scrollInterval);
+        scrollInterval = null;
+      }
+    }
+
     function saveState() {
       try {
         const data = { policeData, streets, assignments };
@@ -322,7 +355,6 @@
       }
     }
 
-    // Carrega o estado salvo ou define o estado inicial
     function loadState() {
       try {
         const saved = localStorage.getItem('escala_data');
@@ -340,7 +372,6 @@
     }
 
     function init() {
-      // Tenta carregar dados salvos. Se não houver, define estado vazio padrão
       if (!loadState()) {
         policeData = [];
         streets = ["Rua Margarida", "Rua Camélia"];
@@ -374,6 +405,10 @@
       const unassignedList = document.getElementById('unassigned-list');
       unassignedList.ondragover = allowDrop;
       unassignedList.ondrop = (e) => drop(e, 'unassigned');
+
+      // Interrompe o auto-scroll quando o arraste terminar
+      document.addEventListener('dragend', stopAutoScroll);
+      document.addEventListener('drop', stopAutoScroll);
     }
 
     function processPastedText() {
@@ -478,7 +513,9 @@
       card.className = `police-card ${police.present ? 'present' : ''}`;
       card.draggable = true;
       card.id = police.id;
+      
       card.ondragstart = drag;
+      card.ondrag = handleAutoScroll; // Dispara a medição da borda enquanto arrasta
 
       card.innerHTML = `
         <div class="police-info">
@@ -527,6 +564,7 @@
 
     function drop(ev, targetStreet) {
       ev.preventDefault();
+      stopAutoScroll();
       removeDragOver(ev);
       const id = ev.dataTransfer.getData("text/plain");
 
