@@ -47,6 +47,28 @@
       text-align: center;
     }
 
+    /* Cabeçalho exclusivo para Impressão (escondido na tela) */
+    .print-header {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #000;
+      padding-bottom: 10px;
+    }
+
+    .print-header img {
+      max-height: 70px;
+      width: auto;
+    }
+
+    .print-header h2 {
+      font-size: 1.3rem;
+      color: #000;
+      text-align: center;
+    }
+
     header {
       background-color: var(--primary);
       color: white;
@@ -250,9 +272,14 @@
       resize: vertical;
     }
 
+    /* REGRAS DE IMPRESSÃO */
     @media print {
       body { background: white; padding: 0; }
       header, .controls, button, .btn-pdf, dialog, .btn-delete-police, #error-toast { display: none !important; }
+      
+      /* Exibe o cabeçalho impresso com a imagem no topo */
+      .print-header { display: flex !important; }
+
       main.dashboard { display: block; }
       #police-panel { display: none; }
       .streets-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -265,6 +292,13 @@
 <body>
 
   <aside id="error-toast" aria-live="polite"></aside>
+
+  <!-- Cabeçalho visível APENAS na Impressão -->
+  <div class="print-header">
+    <!-- Você pode trocar o link da imagem abaixo pela URL da imagem desejada -->
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Brasao_Estado_Sao_Paulo.svg/1200px-Brasao_Estado_Sao_Paulo.svg.png" alt="Brasão / Logotipo">
+    <h2>ESCALA DE SERVIÇO - ATIVIDADE DELEGADA</h2>
+  </div>
 
   <input type="file" id="pdf-input" class="hidden-input" accept="application/pdf">
 
@@ -453,7 +487,7 @@
         console.error("Erro ao ler PDF:", err);
         showError('Falha ao extrair texto do arquivo PDF selecionado.');
       } finally {
-        e.target.value = ''; // Reseta o campo para permitir selecionar o mesmo arquivo novamente
+        e.target.value = '';
       }
     }
 
@@ -469,12 +503,15 @@
     }
 
     function processText(rawText) {
-      const policeRegex = /(?:CORONEL|MAJOR|CAPIT[AÃ]O|TENENTE|SARGENTO|CABO|SOLDADO|CEL|MAJ|CAP|1º\s*TEN|2º\s*TEN|1º\s*SGT|2º\s*SGT|3º\s*SGT|TEN|SGT|CB|SD)\s+.*?(?=\r?\n|$)/gi;
-      const matches = rawText.match(policeRegex);
+      // RegEx para capturar a LINHA INTEIRA que contém uma patente
+      const linePoliceRegex = /(?:^|\r?\n)(?=[^\r\n]*?\b(?:CORONEL|MAJOR|CAPIT[AÃ]O|TENENTE|SARGENTO|CABO|SOLDADO|CEL|MAJ|CAP|1º\s*TEN|2º\s*TEN|1º\s*SGT|2º\s*SGT|3º\s*SGT|TEN|SGT|CB|SD)\b)[^\r\n]+/gi;
+      const matches = rawText.match(linePoliceRegex);
 
       if (matches && matches.length > 0) {
-        const cleanList = Array.from(new Set(matches.map(m => m.trim().replace(/\s+/g, ' '))))
-          .filter(name => name.length > 5);
+        // Limita cada linha encontrada aos PRIMEIROS 40 CARACTERES (.slice(0, 40))
+        const cleanList = Array.from(new Set(
+          matches.map(m => m.trim().replace(/\s+/g, ' ').slice(0, 40))
+        )).filter(name => name.length > 3);
 
         policeData = cleanList.map((name, index) => ({ id: `p-${Date.now()}-${index}`, name: name.toUpperCase(), present: false }));
         assignments = { 'unassigned': policeData.map(p => p.id) };
