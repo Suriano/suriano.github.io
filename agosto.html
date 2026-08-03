@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistema de Escala - Atividade Delegada (HTML5)</title>
+
+  <!-- Biblioteca PDF.js para extração de texto de PDFs no navegador -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    // Configura o worker do PDF.js
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  </script>
   
   <style>
     :root {
@@ -312,13 +319,13 @@
     let streets = ["Rua Margarida", "Rua Camélia"];
     let assignments = {};
 
-    // Variaveis de controle do Auto-Scroll
+    // Variaveis do Auto-Scroll ao arrastar
     let scrollInterval = null;
-    const scrollThreshold = 100; // Margem de ativacão em pixels nas bordas da tela
-    const scrollSpeed = 16;      // Velocidade do deslocamento da tela
+    const scrollThreshold = 100;
+    const scrollSpeed = 16;
 
     function handleAutoScroll(e) {
-      if (e.clientY === 0) return; // Evita disparos falsos quando o evento reinicia
+      if (e.clientY === 0) return;
 
       const windowHeight = window.innerHeight;
       const distanceFromBottom = windowHeight - e.clientY;
@@ -327,15 +334,9 @@
       stopAutoScroll();
 
       if (distanceFromBottom < scrollThreshold && distanceFromBottom > 0) {
-        // Rola a janela para baixo
-        scrollInterval = setInterval(() => {
-          window.scrollBy(0, scrollSpeed);
-        }, 16);
+        scrollInterval = setInterval(() => { window.scrollBy(0, scrollSpeed); }, 16);
       } else if (distanceFromTop < scrollThreshold && distanceFromTop > 0) {
-        // Rola a janela para cima
-        scrollInterval = setInterval(() => {
-          window.scrollBy(0, -scrollSpeed);
-        }, 16);
+        scrollInterval = setInterval(() => { window.scrollBy(0, -scrollSpeed); }, 16);
       }
     }
 
@@ -402,13 +403,58 @@
       document.getElementById('search').oninput = filterPolice;
       document.getElementById('btn-process-text').onclick = processPastedText;
 
+      // Evento de seleção de arquivo PDF
+      document.getElementById('pdf-input').onchange = handlePdfUpload;
+
       const unassignedList = document.getElementById('unassigned-list');
       unassignedList.ondragover = allowDrop;
       unassignedList.ondrop = (e) => drop(e, 'unassigned');
 
-      // Interrompe o auto-scroll quando o arraste terminar
       document.addEventListener('dragend', stopAutoScroll);
       document.addEventListener('drop', stopAutoScroll);
+    }
+
+    // Processa o arquivo PDF selecionado
+    async function handlePdfUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (file.type !== 'application/pdf') {
+        showError('Por favor, selecione um arquivo no formato PDF.');
+        return;
+      }
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = '';
+
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          
+          let lastY = null;
+          let pageText = '';
+
+          // Monta o texto preservando as quebras de linha reais do PDF
+          textContent.items.forEach(item => {
+            if (lastY !== null && Math.abs(item.transform[5] - lastY) > 5) {
+              pageText += '\n';
+            }
+            pageText += item.str + ' ';
+            lastY = item.transform[5];
+          });
+
+          fullText += pageText + '\n';
+        }
+
+        processText(fullText);
+      } catch (err) {
+        console.error("Erro ao ler PDF:", err);
+        showError('Falha ao extrair texto do arquivo PDF selecionado.');
+      } finally {
+        e.target.value = ''; // Reseta o campo para permitir selecionar o mesmo arquivo novamente
+      }
     }
 
     function processPastedText() {
@@ -437,7 +483,7 @@
         saveState();
         render();
       } else {
-        showError("Nenhum policial identificado no texto fornecido.");
+        showError("Nenhum policial identificado no arquivo/texto fornecido.");
       }
     }
 
@@ -515,7 +561,7 @@
       card.id = police.id;
       
       card.ondragstart = drag;
-      card.ondrag = handleAutoScroll; // Dispara a medição da borda enquanto arrasta
+      card.ondrag = handleAutoScroll;
 
       card.innerHTML = `
         <div class="police-info">
