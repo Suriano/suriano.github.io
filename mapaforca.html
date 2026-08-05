@@ -1,1 +1,447 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador e Extrator Delegada - PMESP</title>
+    
+    <!-- pdf.js para leitura dos relatórios PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
+    
+    <style>
+        :root {
+            --primary-dark: #0b1e36;
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --bg-body: #f1f5f9;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1;
+            --success: #16a34a;
+            --danger: #dc2626;
+        }
 
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-main); padding: 20px; line-height: 1.5; }
+        .container { max-width: 1600px; margin: 0 auto; }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: white; padding: 20px 28px; border-radius: 12px; margin-bottom: 24px;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+        }
+
+        .header-actions { display: flex; gap: 10px; }
+
+        .btn-print {
+            background-color: #10b981; color: white; border: none; padding: 10px 18px;
+            font-weight: 700; border-radius: 8px; cursor: pointer; font-size: 0.95rem;
+            display: flex; align-items: center; gap: 6px; transition: background 0.2s;
+        }
+        .btn-print:hover { background-color: #059669; }
+
+        .upload-section {
+            background-color: var(--bg-card); border: 2px dashed var(--primary-light);
+            border-radius: 12px; padding: 24px 20px; text-align: center; margin-bottom: 24px;
+            cursor: pointer; transition: background 0.2s, border-color 0.2s;
+        }
+        .upload-section:hover, .upload-section.dragover { background-color: #eff6ff; border-color: var(--primary); }
+        .drop-title { font-size: 1rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 8px; }
+
+        .file-label-btn {
+            display: inline-block; background-color: var(--primary); color: white;
+            padding: 8px 16px; font-weight: 700; border-radius: 8px; cursor: pointer; font-size: 0.9rem;
+        }
+        #file-input { display: none; }
+
+        .card { background: var(--bg-card); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border-color); }
+        .card-title { font-size: 1.1rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 12px; border-bottom: 2px solid var(--bg-body); padding-bottom: 6px; }
+
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+        .info-item { background: #f8fafc; padding: 10px 14px; border-radius: 6px; border-left: 3px solid var(--primary-light); }
+        .info-label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        .info-val { font-size: 0.95rem; font-weight: 600; color: var(--text-main); word-break: break-word; }
+
+        .kanban-board {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin-top: 15px;
+        }
+
+        .station-column {
+            background: #f8fafc; border: 2px solid var(--border-color); border-radius: 10px;
+            padding: 12px; min-height: 240px; display: flex; flex-direction: column; gap: 8px;
+        }
+
+        .station-header {
+            display: flex; justify-content: space-between; align-items: center; font-weight: 700;
+            color: var(--primary-dark); border-bottom: 2px solid var(--border-color); padding-bottom: 6px; font-size: 0.95rem;
+        }
+
+        .qth-container {
+            display: flex; flex-direction: column; gap: 2px; margin-bottom: 4px;
+        }
+
+        .qth-label {
+            font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;
+        }
+
+        .qth-input {
+            width: 100%; padding: 4px 8px; font-size: 0.8rem; border: 1px solid var(--border-color);
+            border-radius: 4px; background: white; color: var(--text-main); font-weight: 600;
+        }
+        .qth-input:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+
+        .qth-print-display { display: none; font-size: 0.78rem; font-weight: 600; color: #333; margin-top: 2px; }
+
+        .badge-count {
+            background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;
+        }
+
+        .drop-zone-station {
+            flex-grow: 1; display: flex; flex-direction: column; gap: 8px;
+            border: 2px dashed transparent; border-radius: 6px; padding: 4px;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .drop-zone-station.drag-over { background-color: #e0f2fe; border-color: var(--primary-light); }
+
+        .police-card {
+            background: white; border: 1px solid var(--border-color); border-left: 4px solid var(--primary-light);
+            border-radius: 8px; padding: 10px; cursor: grab; box-shadow: 0 1px 3px rgba(0,0,0,0.05); user-select: none;
+        }
+
+        .police-card:active { cursor: grabbing; opacity: 0.6; }
+        .police-info { display: flex; flex-direction: column; gap: 4px; margin-bottom: 6px; }
+        .police-rank-line { font-size: 0.82rem; font-weight: 800; color: var(--primary-dark); line-height: 1.2; }
+        .police-name { font-size: 0.85rem; font-weight: 700; color: var(--text-main); word-break: break-word; }
+
+        .presence-btn {
+            width: 100%; margin-top: 4px; padding: 6px; font-size: 0.72rem; font-weight: 700;
+            border-radius: 6px; border: none; cursor: pointer; transition: background 0.2s;
+        }
+
+        .presence-btn.presente { background-color: #dcfce7; color: var(--success); border: 1px solid #86efac; }
+        .presence-btn.ausente { background-color: #fee2e2; color: var(--danger); border: 1px solid #fca5a5; }
+
+        .status-alert { display: none; padding: 14px; border-radius: 8px; margin-bottom: 20px; font-weight: 600; }
+        .status-loading { background-color: #dbeafe; color: #1e40af; }
+        .status-error { background-color: #fee2e2; color: #991b1b; }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .container { max-width: 100%; }
+            .upload-section, .btn-print, #raw-text-card, .instructions-text, .presence-btn { display: none !important; }
+            header { background: none; color: black; padding: 0; border-bottom: 2px solid #000; margin-bottom: 15px; }
+            header h1 { font-size: 1.4rem; color: black; }
+            header p { color: #333; }
+            .card { border: none; padding: 0; margin-bottom: 15px; }
+            .kanban-board { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+            .station-column { border: 1px solid #666; background: white; min-height: auto; page-break-inside: avoid; }
+            .police-card { border: 1px solid #999; box-shadow: none; break-inside: avoid; }
+            .print-status { display: block !important; font-weight: bold; font-size: 0.75rem; margin-top: 4px; }
+            .qth-input { display: none !important; }
+            .qth-print-display { display: block !important; }
+        }
+        
+        .print-status { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <h1>Polícia Militar do Estado de São Paulo</h1>
+            <p>Escala Operacional Delegada - Alocação por CPP e QTH</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn-print" onclick="window.print()">🖨️ Imprimir Escala</button>
+        </div>
+    </header>
+
+    <div class="upload-section" id="drop-zone-upload">
+        <div class="drop-title">📄 Arraste o relatório PDF da Delegada aqui para carregar o efetivo</div>
+        <label for="file-input" class="file-label-btn" onclick="event.stopPropagation()">📂 Selecionar Relatório PDF</label>
+        <input type="file" id="file-input" accept="application/pdf, .pdf">
+    </div>
+
+    <div id="status-msg" class="status-alert"></div>
+
+    <div id="results-area" style="display: none;">
+        <div class="card">
+            <div class="card-title">📌 Dados Gerais da Escala</div>
+            <div class="info-grid" id="general-info-grid"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">🛡️ Distribuição de Postos (CPP), QTH e Controle de Chegada</div>
+            <p class="instructions-text" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
+                💡 <strong>Instruções:</strong> Digite o QTH (localização) no campo abaixo de cada CPP. Arraste os policiais para o posto correto e altere a presença conforme a chegada.
+            </p>
+
+            <div class="kanban-board">
+                <!-- Efetivo Não Alocado -->
+                <div class="station-column">
+                    <div class="station-header">
+                        <span>📋 Não Alocado</span>
+                        <span class="badge-count" id="count-unassigned">0</span>
+                    </div>
+                    <div class="drop-zone-station" id="unassigned" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'unassigned')"></div>
+                </div>
+
+                <!-- Postos CPP 1 a 10 com campo QTH -->
+                <script>
+                    for (let i = 1; i <= 10; i++) {
+                        document.write(`
+                            <div class="station-column">
+                                <div class="station-header">
+                                    <span>🛡️ CPP ${i}</span>
+                                    <span class="badge-count" id="count-cpp${i}">0</span>
+                                </div>
+                                <div class="qth-container">
+                                    <span class="qth-label">QTH:</span>
+                                    <input type="text" class="qth-input" id="input-qth-cpp${i}" placeholder="Digite o QTH..." oninput="updateQTHPrint('cpp${i}', this.value)">
+                                    <span class="qth-print-display" id="print-qth-cpp${i}">-</span>
+                                </div>
+                                <div class="drop-zone-station" id="cpp${i}" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'cpp${i}')"></div>
+                            </div>
+                        `);
+                    }
+                </script>
+            </div>
+        </div>
+
+        <div class="card" id="raw-text-card">
+            <div class="card-title">🔍 Conteúdo Bruto Extraído</div>
+            <div class="raw-text-box" id="raw-text-content" style="background:#0f172a; color:#38bdf8; padding:12px; border-radius:6px; font-family:monospace; font-size:0.8rem; max-height:200px; overflow-y:auto;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const fileInput = document.getElementById('file-input');
+    const uploadZone = document.getElementById('drop-zone-upload');
+    let policeDatabase = [];
+    const stations = ['unassigned', ...Array.from({length: 10}, (_, i) => `cpp${i + 1}`)];
+
+    uploadZone.addEventListener('click', () => fileInput.click());
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length > 0) processPDFFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) processPDFFile(e.target.files[0]);
+    });
+
+    function updateQTHPrint(cppId, val) {
+        const printElem = document.getElementById(`print-qth-${cppId}`);
+        if (printElem) {
+            printElem.innerText = val.trim() !== '' ? val : '-';
+        }
+    }
+
+    async function processPDFFile(file) {
+        showStatus('Lendo e extraindo dados da escala...', 'loading');
+
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+            const pdf = await loadingTask.promise;
+            
+            let fullText = '';
+            
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                const page = await pdf.getPage(pageNum);
+                const textContent = await page.getTextContent();
+                
+                let linesMap = {};
+                textContent.items.forEach(item => {
+                    let y = Math.round(item.transform[5] / 4) * 4;
+                    let x = item.transform[4];
+                    if (!linesMap[y]) linesMap[y] = [];
+                    linesMap[y].push({ x: x, str: item.str });
+                });
+
+                let sortedY = Object.keys(linesMap).sort((a, b) => b - a);
+                
+                sortedY.forEach(y => {
+                    let lineItems = linesMap[y].sort((a, b) => a.x - b.x);
+                    let lineStr = lineItems.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim();
+                    if (lineStr) fullText += lineStr + '\n';
+                });
+            }
+
+            parseAndRender(fullText);
+            hideStatus();
+            document.getElementById('results-area').style.display = 'block';
+
+        } catch (err) {
+            console.error(err);
+            showStatus('Erro ao ler o arquivo PDF.', 'error');
+        }
+    }
+
+    function parseAndRender(text) {
+        document.getElementById('raw-text-content').innerText = text;
+
+        const extractField = (regex, defaultVal = "Não especificado") => {
+            const match = text.match(regex);
+            return match ? match[1].trim() : defaultVal;
+        };
+
+        let terminoValue = "Não especificado";
+        const terminoMatch = text.match(/T[ée]rmino[\s\S]*?(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2})/i);
+        if (terminoMatch) terminoValue = terminoMatch[1];
+
+        const fields = [
+            { label: "ID da Escala", val: extractField(/ID:\s*(\d+)/i) },
+            { label: "Tipo de Delegada", val: extractField(/(?:Tipo de Delegada|Tipo de Dejem):\s*([^\n]+)/i) },
+            { label: "Local Original", val: extractField(/Local:\s*([^\n]+)/i) },
+            { label: "Data/Hora Início", val: extractField(/(?:Data Início|Início):\s*([0-9\/]+ [0-9:]+)/i) },
+            { label: "Data/Hora Término", val: terminoValue },
+            { label: "Comandante da Escala", val: extractField(/Comandante da Escala[\s\S]*?Nome\s*([^\n]+)/i).replace(/\d{5,7}-[\dX]/gi, '').trim() }
+        ];
+
+        document.getElementById('general-info-grid').innerHTML = fields.map(f => `
+            <div class="info-item">
+                <div class="info-label">${f.label}</div>
+                <div class="info-val">${f.val}</div>
+            </div>
+        `).join('');
+
+        const lines = text.split('\n');
+        policeDatabase = [];
+        const seenREs = new Set();
+
+        lines.forEach((line) => {
+            const reMatch = line.match(/(\b\d{5,7}-[\dX]\b)/i);
+
+            if (reMatch) {
+                const reExact = reMatch[1];
+                const reKey = reExact.toUpperCase();
+
+                if (!seenREs.has(reKey)) {
+                    seenREs.add(reKey);
+
+                    let cleanText = line.replace(reExact, '')
+                                        .replace(/\b\d{2}:\d{2}\b/g, '')
+                                        .replace(/\b(COPOM|DIV OP|BPM\/M|CIA PM)\b[\w\.\/]*/gi, '')
+                                        .replace(/\s+/g, ' ')
+                                        .trim();
+
+                    let rankLine = "";
+                    let nameStr = "";
+
+                    const rankRegex = /(^.*?\b(?:CEL|TEN|MAJ|CAP|SGT|CB|SD|PM)\b)/i;
+                    const matchRank = cleanText.match(rankRegex);
+
+                    if (matchRank) {
+                        rankLine = `${matchRank[1]} ${reExact}`.trim();
+                        nameStr = cleanText.substring(matchRank[0].length).trim();
+                    } else {
+                        rankLine = `PM ${reExact}`;
+                        nameStr = cleanText;
+                    }
+
+                    nameStr = nameStr.replace(/^\d+\.?\s*/, '').trim();
+
+                    policeDatabase.push({
+                        id: `pm-${reKey.replace('-', '')}`,
+                        rankLine: rankLine,
+                        nome: nameStr || "Policial",
+                        estacao: 'unassigned',
+                        presente: false
+                    });
+                }
+            }
+        });
+
+        renderKanban();
+    }
+
+    function renderKanban() {
+        stations.forEach(st => {
+            const zone = document.getElementById(st);
+            if (!zone) return;
+            zone.innerHTML = '';
+            
+            const filtered = policeDatabase.filter(p => p.estacao === st);
+            document.getElementById(`count-${st}`).innerText = filtered.length;
+
+            filtered.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'police-card';
+                card.draggable = true;
+                card.id = p.id;
+                card.ondragstart = (e) => handleDragStart(e, p.id);
+
+                card.innerHTML = `
+                    <div class="police-info">
+                        <div class="police-rank-line">${p.rankLine}</div>
+                        <div class="police-name">${p.nome}</div>
+                        <div class="print-status">${p.presente ? ' [PRESENTE]' : ' [AUSENTE]'}</div>
+                    </div>
+                    <button class="presence-btn ${p.presente ? 'presente' : 'ausente'}" onclick="togglePresence('${p.id}')">
+                        ${p.presente ? '🟢 PRESENÇA CONFIRMADA' : '🔴 AUSENTE'}
+                    </button>
+                `;
+                zone.appendChild(card);
+            });
+        });
+    }
+
+    function handleDragStart(e, id) {
+        e.dataTransfer.setData('text/plain', id);
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.currentTarget.classList.add('drag-over');
+    }
+
+    function handleDragLeave(e) {
+        e.currentTarget.classList.remove('drag-over');
+    }
+
+    function handleDrop(e, targetStation) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('drag-over');
+        
+        const id = e.dataTransfer.getData('text/plain');
+        const police = policeDatabase.find(p => p.id === id);
+        
+        if (police) {
+            police.estacao = targetStation;
+            renderKanban();
+        }
+    }
+
+    function togglePresence(id) {
+        const police = policeDatabase.find(p => p.id === id);
+        if (police) {
+            police.presente = !police.presente;
+            renderKanban();
+        }
+    }
+
+    function showStatus(msg, type) {
+        const status = document.getElementById('status-msg');
+        status.innerText = msg;
+        status.className = `status-alert status-${type}`;
+        status.style.display = 'block';
+    }
+
+    function hideStatus() {
+        document.getElementById('status-msg').style.display = 'none';
+    }
+</script>
+
+</body>
+</html>
