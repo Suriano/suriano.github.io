@@ -69,7 +69,7 @@
         .card-header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--bg-body); padding-bottom: 8px; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
         .card-title { font-size: 1.1rem; font-weight: 700; color: var(--primary-dark); }
 
-        /* Estilos da Busca Rápida */
+        /* Busca Rápida */
         .search-box {
             display: flex; align-items: center; gap: 8px; background: #f1f5f9;
             padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color); width: 100%; max-width: 320px;
@@ -98,16 +98,17 @@
             color: var(--primary-dark); border-bottom: 2px solid var(--border-color); padding-bottom: 6px; font-size: 0.95rem;
         }
 
+        /* QTH Ajustado para ficar na mesma linha */
         .qth-container {
-            display: flex; flex-direction: column; gap: 2px; margin-bottom: 4px;
+            display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
         }
 
         .qth-label {
-            font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;
+            font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; white-space: nowrap;
         }
 
         .qth-input {
-            width: 100%; padding: 4px 8px; font-size: 0.8rem; border: 1px solid var(--border-color);
+            flex-grow: 1; padding: 4px 8px; font-size: 0.8rem; border: 1px solid var(--border-color);
             border-radius: 4px; background: white; color: var(--text-main); font-weight: 600;
         }
         .qth-input:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
@@ -164,7 +165,7 @@
             .police-card.hidden-search { display: block !important; }
             .print-status { display: block !important; font-weight: bold; font-size: 0.75rem; margin-top: 4px; }
             .qth-input { display: none !important; }
-            .qth-print-display { display: block !important; }
+            .qth-print-display { display: inline-block !important; }
         }
         
         .print-status { display: none; }
@@ -221,7 +222,7 @@
                     <div class="drop-zone-station" id="unassigned" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'unassigned')"></div>
                 </div>
 
-                <!-- Postos CPP 1 a 10 com campo QTH -->
+                <!-- Postos CPP 1 a 10 com campo QTH na mesma linha -->
                 <script>
                     for (let i = 1; i <= 10; i++) {
                         document.write(`
@@ -258,7 +259,6 @@
     let rawTextHTML = '';
     const stations = ['unassigned', ...Array.from({length: 10}, (_, i) => `cpp${i + 1}`)];
 
-    // Chaves de armazenamento LocalStorage
     const STORAGE_POLICE = 'pmesp_police_db';
     const STORAGE_QTH = 'pmesp_qth_data';
     const STORAGE_INFO = 'pmesp_general_info';
@@ -460,7 +460,6 @@
             });
         });
 
-        // Reaplica o filtro de busca caso o usuário esteja pesquisando algo no momento
         const currentSearch = document.getElementById('search-input').value;
         if (currentSearch) handleSearch(currentSearch);
     }
@@ -512,7 +511,6 @@
         document.getElementById('status-msg').style.display = 'none';
     }
 
-    /* Persistência via LocalStorage */
     function savePoliceToLocalStorage() {
         localStorage.setItem(STORAGE_POLICE, JSON.stringify(policeDatabase));
     }
