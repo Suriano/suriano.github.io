@@ -98,7 +98,6 @@
             color: var(--primary-dark); border-bottom: 2px solid var(--border-color); padding-bottom: 6px; font-size: 0.95rem;
         }
 
-        /* QTH Ajustado para ficar na mesma linha */
         .qth-container {
             display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
         }
@@ -222,7 +221,7 @@
                     <div class="drop-zone-station" id="unassigned" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'unassigned')"></div>
                 </div>
 
-                <!-- Postos CPP 1 a 10 com campo QTH na mesma linha -->
+                <!-- Postos CPP 1 a 10 com campo QTH -->
                 <script>
                     for (let i = 1; i <= 10; i++) {
                         document.write(`
@@ -348,9 +347,26 @@
         }
     }
 
+    function extractComandante(lines) {
+        for (let i = 0; i < lines.length; i++) {
+            if (/Comandante da Escala/i.test(lines[i])) {
+                // Busca 2 linhas abaixo do rótulo "Comandante da Escala"
+                if (i + 2 < lines.length) {
+                    const targetLine = lines[i + 2].trim();
+                    if (targetLine.length > 0 && !/Comandante da Escala/i.test(targetLine)) {
+                        return targetLine;
+                    }
+                }
+            }
+        }
+        return "Não informado";
+    }
+
     function parseAndRender(text) {
         rawTextHTML = text;
         document.getElementById('raw-text-content').innerText = text;
+
+        const lines = text.split('\n');
 
         const extractField = (regex, defaultVal = "Não especificado") => {
             const match = text.match(regex);
@@ -367,7 +383,7 @@
             { label: "Local Original", val: extractField(/Local:\s*([^\n]+)/i) },
             { label: "Data/Hora Início", val: extractField(/(?:Data Início|Início):\s*([0-9\/]+ [0-9:]+)/i) },
             { label: "Data/Hora Término", val: terminoValue },
-            { label: "Comandante da Escala", val: extractField(/Comandante da Escala[\s\S]*?Nome\s*([^\n]+)/i).replace(/\d{5,7}-[\dX]/gi, '').trim() }
+            { label: "Comandante da Escala", val: extractComandante(lines) }
         ];
 
         generalInfoHTML = fields.map(f => `
@@ -379,7 +395,6 @@
 
         document.getElementById('general-info-grid').innerHTML = generalInfoHTML;
 
-        const lines = text.split('\n');
         policeDatabase = [];
         const seenREs = new Set();
 
