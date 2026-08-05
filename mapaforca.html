@@ -26,8 +26,16 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-        body { background-color: var(--bg-body); color: var(--text-main); padding: 20px; line-height: 1.5; }
-        .container { max-width: 1600px; margin: 0 auto; }
+        body { 
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+            padding: 20px; 
+            line-height: 1.5; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container { max-width: 1600px; margin: 0 auto; flex: 1; width: 100%; }
 
         header {
             background: linear-gradient(135deg, var(--primary-dark), var(--primary));
@@ -157,10 +165,31 @@
         .status-loading { background-color: #dbeafe; color: #1e40af; }
         .status-error { background-color: #fee2e2; color: #991b1b; }
 
+        /* Rodapé exclusivo da página WEB */
+        footer {
+            margin-top: 30px;
+            padding: 16px 0;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        footer a {
+            color: var(--primary-light);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
         @media print {
             body { background: white; padding: 0; }
             .container { max-width: 100%; }
-            .upload-section, .btn-print, .btn-clear, #raw-text-card, .instructions-text, .presence-btn, .search-box, .station-select-mobile { display: none !important; }
+            .upload-section, .btn-print, .btn-clear, #raw-text-card, .instructions-text, .presence-btn, .search-box, .station-select-mobile, footer { display: none !important; }
             header { background: none; color: black; padding: 0; border-bottom: 2px solid #000; margin-bottom: 15px; }
             header h1 { font-size: 1.4rem; color: black; }
             header p { color: #333; }
@@ -264,6 +293,12 @@
         </div>
     </div>
 </div>
+
+<footer>
+    Versão 1.2026 - 05AGO26<br>
+    Desenvolvimento - Sgt Suriano<br>
+    <a href="mailto:suriano@policiamilitar.sp.gov.br">suriano@policiamilitar.sp.gov.br</a>
+</footer>
 
 <script>
     const fileInput = document.getElementById('file-input');
@@ -374,20 +409,16 @@
                 ausentes++;
             }
 
-            // Normalização limpa: remove pontos, numerais ordinais e acentos
             const normalizedRank = p.rankLine.toUpperCase()
                                          .replace(/[º°\.]/g, '')
                                          .replace(/\s+/g, ' ');
 
-            // Procura por Oficiais
             if (/\b(CORONEL|TENENTE CORONEL|MAJOR|CAPITAO|TENENTE|CEL|TEN CEL|MAJ|CAP|1 TEN|2 TEN|TEN|ASP)\b/.test(normalizedRank)) {
                 oficiais++;
             } 
-            // Procura por Sargentos / Subtenentes (sigla e por extenso)
             else if (/\b(SUBTENENTE|SARGENTO|SUBTEN|SUB TEN|1 SGT|2 SGT|3 SGT|1SGT|2SGT|3SGT|SGT)\b/.test(normalizedRank)) {
                 sargentos++;
             } 
-            // Demais são considerados Cabos e Soldados
             else {
                 pracas++;
             }
@@ -483,7 +514,6 @@
                     let rankLine = "";
                     let nameStr = "";
 
-                    // Regex atualizada para aceitar escritas por extenso (SARGENTO, SUBTENENTE, SOLDADO, CABO, etc.)
                     const rankRegex = /(^.*?\b(?:CEL|CORONEL|TEN\s+CEL|MAJOR|MAJ|CAPITAO|CAP|1º?\s+TEN|2º?\s+TEN|TENENTE|ASP|SUBTENENTE|SUBTEN|SARGENTO|1º?\s+SGT|2º?\s+SGT|3º?\s+SGT|SGT|CABO|CB|SOLDADO|SD|PM)\b)/i;
                     const matchRank = cleanText.match(rankRegex);
 
