@@ -825,7 +825,7 @@
         e.preventDefault();
         e.currentTarget.classList.add('drag-over');
 
-        const threshold = 120; // Distância em pixels das bordas superior/inferior para ativar a rolagem
+        const threshold = 120; // Distância em pixels do topo/base para disparar o scroll
         const speed = 25;      // Velocidade do scroll
 
         if (e.clientY < threshold) {
