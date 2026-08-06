@@ -30,7 +30,6 @@
         html {
             height: 100%;
             overflow-y: auto;
-            scroll-behavior: auto; /* Alterado para auto para evitar travamentos na velocidade do scroll por JS */
         }
 
         body { 
@@ -234,7 +233,7 @@
         .print-status { display: none; }
     </style>
 </head>
-<body ondragover="handleGlobalDragOver(event)">
+<body>
 
 <div class="container">
     <header>
@@ -311,7 +310,7 @@
                         <span>📋 Não Alocado</span>
                         <span class="badge-count" id="count-unassigned">0</span>
                     </div>
-                    <div class="drop-zone-station" id="unassigned" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'unassigned')"></div>
+                    <div class="drop-zone-station" id="unassigned" ondragover="handleDragOverAutoScroll(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'unassigned')"></div>
                 </div>
 
                 <!-- Postos CPP renderizados dinamicamente -->
@@ -355,19 +354,6 @@
         loadFromLocalStorage();
     });
 
-    // ROLAGEM AUTOMÁTICA ACELERADA (AUTOSCROLL RÁPIDO)
-    function handleGlobalDragOver(e) {
-        e.preventDefault();
-        const sensitivity = 180; // Área maior de disparo (180px do topo e da base)
-        const speed = 55; // Velocidade bem mais rápida
-
-        if (e.clientY < sensitivity) {
-            window.scrollBy(0, -speed);
-        } else if (window.innerHeight - e.clientY < sensitivity) {
-            window.scrollBy(0, speed);
-        }
-    }
-
     function loadStationsList() {
         const saved = localStorage.getItem(STORAGE_STATIONS);
         if (saved) {
@@ -408,7 +394,7 @@
                         <input type="text" class="qth-input" id="input-qth-${stId}" placeholder="Digite o QTH..." oninput="handleQTHInput('${stId}', this.value)">
                         <span class="qth-print-display" id="print-qth-${stId}">-</span>
                     </div>
-                    <div class="drop-zone-station" id="${stId}" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${stId}')"></div>
+                    <div class="drop-zone-station" id="${stId}" ondragover="handleDragOverAutoScroll(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${stId}')"></div>
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', cppHTML);
@@ -834,9 +820,19 @@
         e.dataTransfer.setData('text/plain', id);
     }
 
-    function handleDragOver(e) {
+    /* Função de auto-scroll preciso durante o arraste */
+    function handleDragOverAutoScroll(e) {
         e.preventDefault();
         e.currentTarget.classList.add('drag-over');
+
+        const threshold = 120; // Distância em pixels das bordas superior/inferior para ativar a rolagem
+        const speed = 25;      // Velocidade do scroll
+
+        if (e.clientY < threshold) {
+            window.scrollBy(0, -speed);
+        } else if (window.innerHeight - e.clientY < threshold) {
+            window.scrollBy(0, speed);
+        }
     }
 
     function handleDragLeave(e) {
