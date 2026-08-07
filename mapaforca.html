@@ -170,7 +170,6 @@
             background: white; border: 1px solid var(--border-color); border-left: 4px solid var(--primary-light);
             border-radius: 8px; padding: 10px; cursor: grab; box-shadow: 0 1px 3px rgba(0,0,0,0.05); user-select: none;
             transition: opacity 0.2s;
-            touch-action: none;
         }
 
         .police-card:active { cursor: grabbing; opacity: 0.6; }
@@ -179,13 +178,15 @@
         .police-rank-line { font-size: 0.82rem; font-weight: 800; color: var(--primary-dark); line-height: 1.2; }
         .police-name { font-size: 0.85rem; font-weight: 700; color: var(--text-main); word-break: break-word; }
 
-        .station-select-mobile {
-            width: 100%; margin-top: 6px; padding: 4px 6px; font-size: 0.75rem; font-weight: 600;
-            border-radius: 4px; border: 1px solid var(--border-color); background: #f8fafc; color: var(--text-main);
+        .cpp-select {
+            width: 100%; margin-top: 4px; padding: 6px; font-size: 0.82rem; font-weight: 700;
+            border: 1px solid var(--border-color); border-radius: 4px; background: #f8fafc; color: var(--primary-dark);
+            cursor: pointer; outline: none; position: relative; z-index: 10;
         }
+        .cpp-select:focus { border-color: var(--primary-light); background: #ffffff; }
 
         .presence-btn {
-            width: 100%; margin-top: 4px; padding: 6px; font-size: 0.72rem; font-weight: 700;
+            width: 100%; margin-top: 6px; padding: 6px; font-size: 0.72rem; font-weight: 700;
             border-radius: 6px; border: none; cursor: pointer; transition: background 0.2s;
         }
 
@@ -220,7 +221,7 @@
         @media print {
             body { background: white; padding: 0; overflow: visible !important; }
             .container { max-width: 100%; }
-            .upload-section, .btn-print, .btn-clear, .btn-add-cpp, .btn-remove-cpp, #raw-text-card, .instructions-text, .presence-btn, .search-box, .station-select-mobile, footer { display: none !important; }
+            .upload-section, .btn-print, .btn-clear, .btn-add-cpp, .btn-remove-cpp, #raw-text-card, .instructions-text, .presence-btn, .search-box, .cpp-select, footer { display: none !important; }
             header { background: none; color: black; padding: 0; border-bottom: 2px solid #000; margin-bottom: 15px; }
             header h1 { font-size: 1.4rem; color: black; }
             header p { color: #333; }
@@ -304,7 +305,7 @@
             </div>
             
             <p class="instructions-text" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
-                💡 <strong>Instruções:</strong> Arraste os cartões entre os postos ou altere o posto via menu suspenso. Use o botão <strong>"+ Adicionar CPP"</strong> para criar novos postos.
+                💡 <strong>Instruções:</strong> Arraste os policiais ou escolha a localização diretamente na lista suspensa de cada cartão.
             </p>
 
             <div class="kanban-board" id="kanban-board-container">
@@ -329,7 +330,7 @@
 </div>
 
 <footer>
-    Versão 1.2026 - 07AGO26<br>
+    Versão 1.2026 - 05AGO26<br>
     Desenvolvimento - Suriano<br>
     Dúvidas - Sugestões - Aprendizado<br>
     <a href="mailto:suriano@policiamilitar.sp.gov.br">suriano@policiamilitar.sp.gov.br</a>
@@ -762,15 +763,6 @@
         document.getElementById('general-info-grid').innerHTML = generalInfoHTML;
     }
 
-    function movePoliceToStation(id, newStation) {
-        const police = policeDatabase.find(p => p.id === id);
-        if (police) {
-            police.estacao = newStation;
-            renderKanban();
-            savePoliceToLocalStorage();
-        }
-    }
-
     function renderKanban() {
         const allStations = ['unassigned', ...stationsList];
 
@@ -786,14 +778,14 @@
             filtered.forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'police-card';
-                card.draggable = true;
+                card.setAttribute('draggable', 'true');
                 card.id = p.id;
                 card.ondragstart = (e) => handleDragStart(e, p.id);
 
-                let stationOptions = `<option value="unassigned" ${p.estacao === 'unassigned' ? 'selected' : ''}>📋 Não Alocado</option>`;
+                let optionsHTML = `<option value="unassigned" ${p.estacao === 'unassigned' ? 'selected' : ''}>📋 Não Alocado</option>`;
                 stationsList.forEach(stId => {
                     const num = stId.replace('cpp', '');
-                    stationOptions += `<option value="${stId}" ${p.estacao === stId ? 'selected' : ''}>🛡️ CPP ${num}</option>`;
+                    optionsHTML += `<option value="${stId}" ${p.estacao === stId ? 'selected' : ''}>🛡️ CPP ${num}</option>`;
                 });
 
                 card.innerHTML = `
@@ -802,8 +794,14 @@
                         <div class="police-name">${p.nome}</div>
                         <div class="print-status">${p.presente ? ' [PRESENTE]' : ' [AUSENTE]'}</div>
                     </div>
-                    <select class="station-select-mobile" onchange="movePoliceToStation('${p.id}', this.value)">
-                        ${stationOptions}
+                    <select class="cpp-select" 
+                        onchange="changePoliceStation('${p.id}', this.value)"
+                        onfocus="disableCardDrag('${p.id}')"
+                        onblur="enableCardDrag('${p.id}')"
+                        ontouchstart="disableCardDrag('${p.id}')"
+                        ontouchend="enableCardDrag('${p.id}')"
+                        onmousedown="event.stopPropagation()">
+                        ${optionsHTML}
                     </select>
                     <button class="presence-btn ${p.presente ? 'presente' : 'ausente'}" onclick="togglePresence('${p.id}')">
                         ${p.presente ? '🟢 PRESENÇA CONFIRMADA' : '🔴 AUSENTE'}
@@ -820,17 +818,39 @@
         if (currentSearch) handleSearch(currentSearch);
     }
 
+    function disableCardDrag(cardId) {
+        const card = document.getElementById(cardId);
+        if (card) {
+            card.removeAttribute('draggable');
+        }
+    }
+
+    function enableCardDrag(cardId) {
+        const card = document.getElementById(cardId);
+        if (card) {
+            card.setAttribute('draggable', 'true');
+        }
+    }
+
+    function changePoliceStation(id, newStation) {
+        const police = policeDatabase.find(p => p.id === id);
+        if (police) {
+            police.estacao = newStation;
+            renderKanban();
+            savePoliceToLocalStorage();
+        }
+    }
+
     function handleDragStart(e, id) {
         e.dataTransfer.setData('text/plain', id);
     }
 
-    /* Função de auto-scroll preciso durante o arraste */
     function handleDragOverAutoScroll(e) {
         e.preventDefault();
         e.currentTarget.classList.add('drag-over');
 
-        const threshold = 120; // Distância das bordas para rolar
-        const speed = 25;      // Velocidade da rolagem
+        const threshold = 120;
+        const speed = 25;
 
         if (e.clientY < threshold) {
             window.scrollBy(0, -speed);
@@ -848,7 +868,13 @@
         e.currentTarget.classList.remove('drag-over');
         
         const id = e.dataTransfer.getData('text/plain');
-        movePoliceToStation(id, targetStation);
+        const police = policeDatabase.find(p => p.id === id);
+        
+        if (police) {
+            police.estacao = targetStation;
+            renderKanban();
+            savePoliceToLocalStorage();
+        }
     }
 
     function togglePresence(id) {
