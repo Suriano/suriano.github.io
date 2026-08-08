@@ -366,9 +366,9 @@
             <p>Escala Operacional Delegada - Alocação por CPP e QTH</p>
         </div>
         <div class="header-actions">
-            <button class="btn-lines-modal" onclick="openPDFLinesModal()"> Visualizar / Editar Linhas PDF</button>
+            <button class="btn-lines-modal" onclick="openPDFLinesModal()"> Mapa Força Whatsapp</button>
             <button class="btn-clear" onclick="clearSavedData()"> Limpar Dados Salvos</button>
-            <button class="btn-print" onclick="window.print()"> Imprimir Escala</button>
+            <button class="btn-print" onclick="window.print()"> Mapa Força CPP</button>
         </div>
     </header>
 
@@ -484,6 +484,17 @@
             <div class="form-group">
                 <label for="pdf-line-last"> Última Linha:</label>
                 <input type="text" id="pdf-line-last">
+            </div>
+
+            <!-- Dados do Comandante na Modal -->
+            <div class="modal-section-title"> Dados do Comandante da Escala</div>
+            <div class="form-group">
+                <label for="modal-comandante"> Comandante da Escala:</label>
+                <input type="text" id="modal-comandante" placeholder="Nome / Posto / RE do Comandante" oninput="handleComandanteInput(this.value)">
+            </div>
+            <div class="form-group">
+                <label for="modal-cmd-phone"> Celular do Comandante:</label>
+                <input type="tel" id="modal-cmd-phone" placeholder="(11) 9XXXX-XXXX" oninput="handleCmdPhoneInput(this.value)">
             </div>
 
             <!-- Resumo de Efetivo e Frequência no Modal -->
@@ -705,7 +716,13 @@
     }
 
     function handleCmdPhoneInput(val) {
+        const mainInput = document.getElementById('input-cmd-phone');
+        const modalInput = document.getElementById('modal-cmd-phone');
         const printElem = document.getElementById('print-cmd-phone');
+
+        if (mainInput && mainInput.value !== val) mainInput.value = val;
+        if (modalInput && modalInput.value !== val) modalInput.value = val;
+
         if (printElem) {
             printElem.innerText = val.trim() !== '' ? val : 'Não informado';
         }
@@ -721,7 +738,13 @@
     }
 
     function handleComandanteInput(val) {
+        const mainInput = document.getElementById('input-comandante');
+        const modalInput = document.getElementById('modal-comandante');
         const printElem = document.getElementById('print-comandante');
+
+        if (mainInput && mainInput.value !== val) mainInput.value = val;
+        if (modalInput && modalInput.value !== val) modalInput.value = val;
+
         if (printElem) {
             printElem.innerText = val.trim() !== '' ? val : 'Não informado';
         }
@@ -1046,7 +1069,17 @@
         document.getElementById('pdf-line-12').value = line12;
         document.getElementById('pdf-line-last').value = lineLast;
 
-        updateMetrics(); // Atualiza métricas ao abrir o modal
+        // Atualiza campos do comandante na modal com os valores salvos
+        const savedCmd = localStorage.getItem(STORAGE_COMANDANTE) || '';
+        const savedPhone = localStorage.getItem(STORAGE_CMD_PHONE) || '';
+        
+        const modalCmdInput = document.getElementById('modal-comandante');
+        if (modalCmdInput) modalCmdInput.value = savedCmd;
+
+        const modalPhoneInput = document.getElementById('modal-cmd-phone');
+        if (modalPhoneInput) modalPhoneInput.value = savedPhone;
+
+        updateMetrics();
         document.getElementById('pdf-lines-modal').classList.add('active');
     }
 
@@ -1136,11 +1169,11 @@
         const phone = localStorage.getItem(STORAGE_CMD_PHONE) || '';
         const cmdName = localStorage.getItem(STORAGE_COMANDANTE) || 'Não informado';
         const line1 = cleanLineText(document.getElementById('pdf-line-1').value);
-        const line2 = cleanLineText(document.getElementById('pdf-line-2').value); // Secretaria
+        const line2 = cleanLineText(document.getElementById('pdf-line-2').value);
         const line4 = cleanLineText(document.getElementById('pdf-line-4').value);
         const line8 = cleanLineText(document.getElementById('pdf-line-8').value);
         const line11 = cleanLineText(document.getElementById('pdf-line-11').value);
-        const line12 = cleanLineText(document.getElementById('pdf-line-12').value); // Data/Hora
+        const line12 = cleanLineText(document.getElementById('pdf-line-12').value);
         const lineLast = cleanLineText(document.getElementById('pdf-line-last').value);
 
         let cleanPhone = phone.replace(/\D/g, '');
@@ -1350,11 +1383,17 @@
             const phoneInput = document.getElementById('input-cmd-phone');
             if (phoneInput) phoneInput.value = '';
 
+            const modalPhoneInput = document.getElementById('modal-cmd-phone');
+            if (modalPhoneInput) modalPhoneInput.value = '';
+
             const tipoInput = document.getElementById('input-escala-tipo');
             if (tipoInput) tipoInput.value = '';
 
             const cmdInput = document.getElementById('input-comandante');
             if (cmdInput) cmdInput.value = '';
+
+            const modalCmdInput = document.getElementById('modal-comandante');
+            if (modalCmdInput) modalCmdInput.value = '';
 
             document.getElementById('search-input').value = '';
             document.getElementById('results-area').style.display = 'none';
