@@ -912,19 +912,23 @@
         const lines = text.split('\n').filter(l => l.trim() !== '');
 
         policeDatabase = [];
-        const seenREs = new Set();
+        let autoIdCounter = 1;
 
         lines.forEach((line) => {
-            const reMatch = line.match(/(\b\d{5,7}-[\dX]\b)/i);
+            // Regex mais abrangente para pegar REs com hífen, sem hífen ou com espaços internos
+            const reRegexGlobal = /\b(\d{5,7}(?:[-\s]?[\dX])?)\b/gi;
+            let matches = [...line.matchAll(reRegexGlobal)];
 
-            if (reMatch) {
-                const reExact = reMatch[1];
-                const reKey = reExact.toUpperCase();
+            if (matches.length > 0) {
+                matches.forEach(match => {
+                    let reExact = match[1].replace(/\s+/g, '-');
+                    
+                    // Garante hífen no formato do RE se for numérico sem hífen
+                    if (/^\d{6,8}$/.test(reExact)) {
+                        reExact = reExact.slice(0, -1) + '-' + reExact.slice(-1);
+                    }
 
-                if (!seenREs.has(reKey)) {
-                    seenREs.add(reKey);
-
-                    let cleanText = line.replace(reExact, '')
+                    let cleanText = line.replace(match[0], '')
                                         .replace(/\b\d{2}:\d{2}\b/g, '')
                                         .replace(/\b(COPOM|DIV OP|BPM\/M|CIA PM)\b[\w\.\/]*/gi, '')
                                         .replace(/\s+/g, ' ')
@@ -947,13 +951,13 @@
                     nameStr = nameStr.replace(/^\d+\.?\s*/, '').trim();
 
                     policeDatabase.push({
-                        id: `pm-${reKey.replace('-', '')}`,
+                        id: `pm-${autoIdCounter++}`,
                         rankLine: rankLine,
                         nome: nameStr || "Policial",
                         estacao: 'unassigned',
                         presente: false
                     });
-                }
+                });
             }
         });
 
