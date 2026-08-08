@@ -564,7 +564,7 @@
 </div>
 
 <footer>
-    Versão 1.2026 - 05AGO26<br>
+    Versão 1.2026 - 08AGO26<br>
     Desenvolvimento - Suriano<br>
     Dúvidas - Sugestões - Aprendizado<br>
     <a href="mailto:suriano@policiamilitar.sp.gov.br">suriano@policiamilitar.sp.gov.br</a>
@@ -830,14 +830,12 @@
         const txtSargentos = `${sargentos} ${sargentos === 1 ? 'policial' : 'policiais'}`;
         const txtPracas = `${pracas} ${pracas === 1 ? 'policial' : 'policiais'}`;
 
-        // Atualiza na página principal
         document.getElementById('stat-presentes').innerText = txtPresentes;
         document.getElementById('stat-ausentes').innerText = txtAusentes;
         document.getElementById('stat-oficiais').innerText = txtOficiais;
         document.getElementById('stat-sargentos').innerText = txtSargentos;
         document.getElementById('stat-pracas').innerText = txtPracas;
 
-        // Atualiza dentro do Modal
         const mPres = document.getElementById('modal-stat-presentes');
         if (mPres) mPres.innerText = txtPresentes;
         const mAus = document.getElementById('modal-stat-ausentes');
@@ -915,7 +913,12 @@
         let autoIdCounter = 1;
 
         lines.forEach((line) => {
-            // Regex mais abrangente para pegar REs com hífen, sem hífen ou com espaços internos
+            // Ignora linhas de metadados do sistema (ex: "ID: AISP:", "AISP:", "ID:", etc.)
+            if (/^\s*(?:ID\s*:?\s*)?AISP\b/i.test(line) || /^\s*ID\s*:\s*\w+/i.test(line)) {
+                return;
+            }
+
+            // Regex global para capturar REs
             const reRegexGlobal = /\b(\d{5,7}(?:[-\s]?[\dX])?)\b/gi;
             let matches = [...line.matchAll(reRegexGlobal)];
 
@@ -923,7 +926,6 @@
                 matches.forEach(match => {
                     let reExact = match[1].replace(/\s+/g, '-');
                     
-                    // Garante hífen no formato do RE se for numérico sem hífen
                     if (/^\d{6,8}$/.test(reExact)) {
                         reExact = reExact.slice(0, -1) + '-' + reExact.slice(-1);
                     }
@@ -944,8 +946,13 @@
                         rankLine = `${matchRank[1]} ${reExact}`.trim();
                         nameStr = cleanText.substring(matchRank[0].length).trim();
                     } else {
-                        rankLine = `PM ${reExact}`;
-                        nameStr = cleanText;
+                        // Só adiciona se o texto contiver um nome de policial plausível (não apenas rótulos numéricos ou metadados)
+                        if (/^[A-Za-zÀ-ÖOU-öø-ÿ\s\.-]+$/i.test(cleanText) && cleanText.length > 3) {
+                            rankLine = `PM ${reExact}`;
+                            nameStr = cleanText;
+                        } else {
+                            return; // Ignora se não for uma linha de policial válida
+                        }
                     }
 
                     nameStr = nameStr.replace(/^\d+\.?\s*/, '').trim();
@@ -1103,7 +1110,6 @@
         const line12 = lines.length > 11 ? lines[11] : '';
         const lineLast = lines.length > 0 ? lines[lines.length - 1] : '';
 
-        // Preenche o ID da Escala no Modal
         const modalEscalaId = document.getElementById('modal-escala-id');
         if (modalEscalaId) {
             modalEscalaId.value = currentEscalaID || localStorage.getItem(STORAGE_ESCALA_ID) || 'Não especificado';
@@ -1117,7 +1123,6 @@
         document.getElementById('pdf-line-12').value = line12;
         document.getElementById('pdf-line-last').value = lineLast;
 
-        // Atualiza campos do comandante na modal com os valores salvos
         const savedCmd = localStorage.getItem(STORAGE_COMANDANTE) || '';
         const savedPhone = localStorage.getItem(STORAGE_CMD_PHONE) || '';
         
@@ -1245,7 +1250,7 @@
         if (line4) msg += `${line4}\n`;
         if (line8) msg += `${line8}\n`;
         if (line11) msg += `${line11}\n`;
-        if (line12) msg += `${line12}\n\n\n`; // Quebra de linha adicional após a linha contendo Data/Hora
+        if (line12) msg += `${line12}\n\n\n`;
 
         msg += `*Resumo da Escala:*\n`;
         msg += `Total de Policiais: ${policeDatabase.length}\n`;
