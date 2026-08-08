@@ -84,7 +84,9 @@
         }
         .btn-lines-modal:hover { background-color: var(--whatsapp-hover); }
 
-        .btn-lines-modal svg {
+        .btn-lines-modal svg,
+        .btn-clear svg,
+        .btn-print svg {
             width: 18px;
             height: 18px;
             fill: currentColor;
@@ -380,8 +382,18 @@
                 </svg>
                 Mapa Força Whatsapp
             </button>
-            <button class="btn-clear" onclick="clearSavedData()"> Limpar Dados Salvos</button>
-            <button class="btn-print" onclick="window.print()"> Mapa Força CPP</button>
+            <button class="btn-clear" onclick="clearSavedData()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                </svg>
+                Limpar Dados Salvos
+            </button>
+            <button class="btn-print" onclick="window.print()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/>
+                </svg>
+                Mapa Força CPP
+            </button>
         </div>
     </header>
 
@@ -470,6 +482,10 @@
             <button class="btn-close-modal" onclick="closePDFLinesModal()">✖</button>
         </div>
         <div class="modal-body">
+            <div class="form-group">
+                <label for="modal-escala-id"> ID da Escala:</label>
+                <input type="text" id="modal-escala-id" readonly style="background-color: #e2e8f0; cursor: not-allowed; font-weight: 700; color: var(--primary-dark);">
+            </div>
             <div class="form-group">
                 <label for="pdf-line-1"> 1ª Linha (Cabeçalho):</label>
                 <input type="text" id="pdf-line-1" placeholder="Ex: POLÍCIA MILITAR DO ESTADO DE SÃO PAULO">
@@ -560,6 +576,7 @@
     let policeDatabase = [];
     let generalInfoHTML = '';
     let rawTextHTML = '';
+    let currentEscalaID = 'Não especificado';
     let stationsList = Array.from({length: 10}, (_, i) => `cpp${i + 1}`);
 
     const STORAGE_POLICE = 'pmesp_police_db';
@@ -570,6 +587,7 @@
     const STORAGE_ESCALA_TIPO = 'pmesp_escala_tipo';
     const STORAGE_COMANDANTE = 'pmesp_comandante';
     const STORAGE_STATIONS = 'pmesp_stations_list';
+    const STORAGE_ESCALA_ID = 'pmesp_escala_id';
 
     window.addEventListener('DOMContentLoaded', () => {
         loadStationsList();
@@ -948,13 +966,15 @@
         const terminoMatch = text.match(/T[ée]rmino[\s\S]*?(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2})/i);
         if (terminoMatch) terminoValue = terminoMatch[1];
 
+        currentEscalaID = extractField(/ID:\s*(\d+)/i);
         const initialTipoDelegada = extractField(/(?:Tipo de Delegada|Tipo de Dejem):\s*([^\n]+)/i);
         const initialComandante = extractComandante(lines);
 
+        localStorage.setItem(STORAGE_ESCALA_ID, currentEscalaID);
         localStorage.setItem(STORAGE_ESCALA_TIPO, initialTipoDelegada);
         localStorage.setItem(STORAGE_COMANDANTE, initialComandante);
 
-        renderGeneralInfo(extractField(/ID:\s*(\d+)/i), initialTipoDelegada, extractField(/Local:\s*([^\n]+)/i), extractField(/(?:Data Início|Início):\s*([0-9\/]+ [0-9:]+)/i), terminoValue, initialComandante);
+        renderGeneralInfo(currentEscalaID, initialTipoDelegada, extractField(/Local:\s*([^\n]+)/i), extractField(/(?:Data Início|Início):\s*([0-9\/]+ [0-9:]+)/i), terminoValue, initialComandante);
 
         renderKanban();
         saveAllToLocalStorage();
@@ -1079,6 +1099,12 @@
         const line12 = lines.length > 11 ? lines[11] : '';
         const lineLast = lines.length > 0 ? lines[lines.length - 1] : '';
 
+        // Preenche o ID da Escala no Modal
+        const modalEscalaId = document.getElementById('modal-escala-id');
+        if (modalEscalaId) {
+            modalEscalaId.value = currentEscalaID || localStorage.getItem(STORAGE_ESCALA_ID) || 'Não especificado';
+        }
+
         document.getElementById('pdf-line-1').value = line1;
         document.getElementById('pdf-line-2').value = line2;
         document.getElementById('pdf-line-4').value = line4;
@@ -1106,6 +1132,7 @@
     }
 
     function getFullEditedText() {
+        const escalaId = document.getElementById('modal-escala-id').value.trim();
         const line1 = document.getElementById('pdf-line-1').value.trim();
         const line2 = document.getElementById('pdf-line-2').value.trim();
         const line4 = document.getElementById('pdf-line-4').value.trim();
@@ -1115,6 +1142,7 @@
         const lineLast = document.getElementById('pdf-line-last').value.trim();
 
         let full = '';
+        if (escalaId) full += `\nID da Escala: ${escalaId}\n`;
         if (line1) full += line1 + '\n';
         if (line2) full += line2 + '\n';
         if (line4) full += line4 + '\n';
@@ -1186,6 +1214,7 @@
     function sendWhatsAppCmd() {
         const phone = localStorage.getItem(STORAGE_CMD_PHONE) || '';
         const cmdName = localStorage.getItem(STORAGE_COMANDANTE) || 'Não informado';
+        const escalaId = document.getElementById('modal-escala-id').value.trim();
         const line1 = cleanLineText(document.getElementById('pdf-line-1').value);
         const line2 = cleanLineText(document.getElementById('pdf-line-2').value);
         const line4 = cleanLineText(document.getElementById('pdf-line-4').value);
@@ -1204,14 +1233,15 @@
             cleanPhone = '55' + cleanPhone;
         }
 
-        let msg = `*MAPA FORÇA*\n\n`;
+        let msg = `*MAPA FORÇA*\n`;
+        if (escalaId) msg += `\n*ID da Escala:* ${escalaId}\n\n`;
         if (line1) msg += `${line1}\n`;
         if (line2) msg += `${line2}\n\n`;
         
         if (line4) msg += `${line4}\n`;
         if (line8) msg += `${line8}\n`;
         if (line11) msg += `${line11}\n`;
-        if (line12) msg += `${line12}\n\n`;
+        if (line12) msg += `${line12}\n\n\n`; // Quebra de linha adicional após a linha contendo Data/Hora
 
         msg += `*Resumo da Escala:*\n`;
         msg += `Total de Policiais: ${policeDatabase.length}\n`;
@@ -1329,6 +1359,7 @@
         saveStationsList();
         localStorage.setItem(STORAGE_INFO, generalInfoHTML);
         localStorage.setItem(STORAGE_RAW, rawTextHTML);
+        localStorage.setItem(STORAGE_ESCALA_ID, currentEscalaID);
     }
 
     function loadFromLocalStorage() {
@@ -1339,11 +1370,13 @@
         const savedPhone = localStorage.getItem(STORAGE_CMD_PHONE) || '';
         const savedTipo = localStorage.getItem(STORAGE_ESCALA_TIPO) || '';
         const savedCmd = localStorage.getItem(STORAGE_COMANDANTE) || '';
+        const savedEscalaID = localStorage.getItem(STORAGE_ESCALA_ID) || 'Não especificado';
 
         if (savedPolice && savedPolice !== '[]') {
             policeDatabase = JSON.parse(savedPolice);
             generalInfoHTML = savedInfo || '';
             rawTextHTML = savedRaw || '';
+            currentEscalaID = savedEscalaID;
 
             document.getElementById('general-info-grid').innerHTML = generalInfoHTML;
             document.getElementById('raw-text-content').innerText = rawTextHTML;
@@ -1393,8 +1426,10 @@
             localStorage.removeItem(STORAGE_ESCALA_TIPO);
             localStorage.removeItem(STORAGE_COMANDANTE);
             localStorage.removeItem(STORAGE_STATIONS);
+            localStorage.removeItem(STORAGE_ESCALA_ID);
 
             policeDatabase = [];
+            currentEscalaID = 'Não especificado';
             stationsList = Array.from({length: 10}, (_, i) => `cpp${i + 1}`);
             initKanbanColumns();
 
@@ -1412,6 +1447,9 @@
 
             const modalCmdInput = document.getElementById('modal-comandante');
             if (modalCmdInput) modalCmdInput.value = '';
+
+            const modalEscalaId = document.getElementById('modal-escala-id');
+            if (modalEscalaId) modalEscalaId.value = '';
 
             document.getElementById('search-input').value = '';
             document.getElementById('results-area').style.display = 'none';
