@@ -1438,7 +1438,6 @@
                 return;
             }
 
-            // Procura estritamente por um posto/graduação seguido de um RE válido (ex: 6 a 7 dígitos com hífen/dígito verificador opcional)
             const policeRegex = /\b(?:CEL|CORONEL|TEN\s+CEL|MAJOR|MAJ|CAPITAO|CAP|1º?\s+TEN|2º?\s+TEN|TENENTE|ASP|SUBTENENTE|SUBTEN|SARGENTO|1º?\s+SGT|2º?\s+SGT|3º?\s+SGT|SGT|CABO|CB|SOLDADO|SD|PM)\b[^0-9]*(\d{5,7}(?:[-\s]?[\dX])?)\b/i;
             const matchPolice = line.match(policeRegex);
 
@@ -1448,7 +1447,6 @@
                     reExact = reExact.slice(0, -1) + '-' + reExact.slice(-1);
                 }
 
-                // Evita duplicidade se o RE já foi adicionado
                 if (policeDatabase.some(p => p.rankLine.includes(reExact))) {
                     return;
                 }
@@ -1471,7 +1469,6 @@
                     nameStr = cleanText.replace(reExact, '').trim();
                 }
 
-                // Remove números de ordem residuais do início/fim do nome
                 nameStr = nameStr.replace(/^\d+[\.\)]?\s*/, '').replace(/\s+\d+[\.\)]?\s*$/, '').trim();
 
                 policeDatabase.push({
@@ -1581,7 +1578,16 @@
                 let optionsHTML = `<option value="unassigned" ${p.estacao === 'unassigned' ? 'selected' : ''}> Não Alocado</option>`;
                 stationsList.forEach(stId => {
                     const num = stId.replace('cpp', '');
-                    optionsHTML += `<option value="${stId}" ${p.estacao === stId ? 'selected' : ''}> CPP ${num}</option>`;
+                    const qthStorage = localStorage.getItem(STORAGE_QTH);
+                    let qthVal = '';
+                    if (qthStorage) {
+                        try {
+                            const parsed = JSON.parse(qthStorage);
+                            qthVal = parsed[stId] ? parsed[stId].trim() : '';
+                        } catch(e){}
+                    }
+                    const qthDisplay = qthVal ? ` - ${qthVal}` : '';
+                    optionsHTML += `<option value="${stId}" ${p.estacao === stId ? 'selected' : ''}>CPP ${num}${qthDisplay}</option>`;
                 });
 
                 card.innerHTML = `
@@ -1591,6 +1597,7 @@
                         <div class="print-status">${p.presente ? ' [PRESENTE]' : ' [AUSENTE]'}</div>
                     </div>
                     <select class="cpp-select" 
+                        style="font-size: 0.72rem;"
                         onchange="changePoliceStation('${p.id}', this.value)"
                         onfocus="disableCardDrag('${p.id}')"
                         onblur="enableCardDrag('${p.id}')"
@@ -1876,6 +1883,7 @@
             }
         });
         localStorage.setItem(STORAGE_QTH, JSON.stringify(qthObj));
+        renderKanban(); // Atualiza os selects ao modificar o QTH
     }
 
     function saveAllToLocalStorage() {
