@@ -1438,50 +1438,48 @@
                 return;
             }
 
-            const reRegexGlobal = /\b(\d{5,7}(?:[-\s]?[\dX])?)\b/gi;
-            let matches = [...line.matchAll(reRegexGlobal)];
+            // Procura estritamente por um posto/graduação seguido de um RE válido (ex: 6 a 7 dígitos com hífen/dígito verificador opcional)
+            const policeRegex = /\b(?:CEL|CORONEL|TEN\s+CEL|MAJOR|MAJ|CAPITAO|CAP|1º?\s+TEN|2º?\s+TEN|TENENTE|ASP|SUBTENENTE|SUBTEN|SARGENTO|1º?\s+SGT|2º?\s+SGT|3º?\s+SGT|SGT|CABO|CB|SOLDADO|SD|PM)\b[^0-9]*(\d{5,7}(?:[-\s]?[\dX])?)\b/i;
+            const matchPolice = line.match(policeRegex);
 
-            if (matches.length > 0) {
-                matches.forEach(match => {
-                    let reExact = match[1].replace(/\s+/g, '-');
-                    
-                    if (/^\d{6,8}$/.test(reExact)) {
-                        reExact = reExact.slice(0, -1) + '-' + reExact.slice(-1);
-                    }
+            if (matchPolice) {
+                let reExact = matchPolice[1].replace(/\s+/g, '-');
+                if (/^\d{6,8}$/.test(reExact)) {
+                    reExact = reExact.slice(0, -1) + '-' + reExact.slice(-1);
+                }
 
-                    let cleanText = line.replace(match[0], '')
-                                        .replace(/\b\d{2}:\d{2}\b/g, '')
-                                        .replace(/\b(COPOM|DIV OP|BPM\/M|CIA PM)\b[\w\.\/]*/gi, '')
-                                        .replace(/\s+/g, ' ')
-                                        .trim();
+                // Evita duplicidade se o RE já foi adicionado
+                if (policeDatabase.some(p => p.rankLine.includes(reExact))) {
+                    return;
+                }
 
-                    let rankLine = "";
-                    let nameStr = "";
+                let cleanText = line.replace(/\b\d{2}:\d{2}\b/g, '')
+                                    .replace(/\b(COPOM|DIV OP|BPM\/M|CIA PM)\b[\w\.\/]*/gi, '')
+                                    .replace(/\s+/g, ' ')
+                                    .trim();
 
-                    const rankRegex = /(^.*?\b(?:CEL|CORONEL|TEN\s+CEL|MAJOR|MAJ|CAPITAO|CAP|1º?\s+TEN|2º?\s+TEN|TENENTE|ASP|SUBTENENTE|SUBTEN|SARGENTO|1º?\s+SGT|2º?\s+SGT|3º?\s+SGT|SGT|CABO|CB|SOLDADO|SD|PM)\b)/i;
-                    const matchRank = cleanText.match(rankRegex);
+                let rankLine = "";
+                let nameStr = "";
 
-                    if (matchRank) {
-                        rankLine = `${matchRank[1]} ${reExact}`.trim();
-                        nameStr = cleanText.substring(matchRank[0].length).trim();
-                    } else {
-                        if (/^[A-Za-zÀ-ÖOU-öø-ÿ\s\.-]+$/i.test(cleanText) && cleanText.length > 3) {
-                            rankLine = `PM ${reExact}`;
-                            nameStr = cleanText;
-                        } else {
-                            return;
-                        }
-                    }
+                const matchRank = cleanText.match(/(^.*?\b(?:CEL|CORONEL|TEN\s+CEL|MAJOR|MAJ|CAPITAO|CAP|1º?\s+TEN|2º?\s+TEN|TENENTE|ASP|SUBTENENTE|SUBTEN|SARGENTO|1º?\s+SGT|2º?\s+SGT|3º?\s+SGT|SGT|CABO|CB|SOLDADO|SD|PM)\b)/i);
 
-                    nameStr = nameStr.replace(/^\d+\.?\s*/, '').trim();
+                if (matchRank) {
+                    rankLine = `${matchRank[1]} ${reExact}`.trim();
+                    nameStr = cleanText.substring(matchRank[0].length).replace(reExact, '').trim();
+                } else {
+                    rankLine = `PM ${reExact}`;
+                    nameStr = cleanText.replace(reExact, '').trim();
+                }
 
-                    policeDatabase.push({
-                        id: `pm-${autoIdCounter++}`,
-                        rankLine: rankLine,
-                        nome: nameStr || "Policial",
-                        estacao: 'unassigned',
-                        presente: false
-                    });
+                // Remove números de ordem residuais do início/fim do nome
+                nameStr = nameStr.replace(/^\d+[\.\)]?\s*/, '').replace(/\s+\d+[\.\)]?\s*$/, '').trim();
+
+                policeDatabase.push({
+                    id: `pm-${autoIdCounter++}`,
+                    rankLine: rankLine,
+                    nome: nameStr || "Policial",
+                    estacao: 'unassigned',
+                    presente: false
                 });
             }
         });
