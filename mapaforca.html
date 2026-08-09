@@ -742,7 +742,7 @@
                     </div>
                 </div>
 
-                <!-- Item 2 - Butantã -->
+                <!-- Item 2 - Butantã (Preenchido com Metrô Vila Sônia, Metrô São Paulo Morumbi, Metrô Butantã) -->
                 <div class="aisp-card" data-aisp="aisp-butanta">
                     <div class="aisp-header" onclick="toggleAispBody(this)">
                         <div>
@@ -752,6 +752,27 @@
                         <span style="font-size: 0.8rem;">▼</span>
                     </div>
                     <div class="aisp-body" style="display: none;">
+                        <div class="qth-item">
+                            <div class="qth-item-text">
+                                <span style="color:#ef4444;">📍</span> 
+                                <input type="text" class="qth-val-input" value="Metrô Vila Sônia">
+                            </div>
+                            <button class="btn-exclude" onclick="this.parentElement.remove()">Excluir</button>
+                        </div>
+                        <div class="qth-item">
+                            <div class="qth-item-text">
+                                <span style="color:#ef4444;">📍</span> 
+                                <input type="text" class="qth-val-input" value="Metrô São Paulo Morumbi">
+                            </div>
+                            <button class="btn-exclude" onclick="this.parentElement.remove()">Excluir</button>
+                        </div>
+                        <div class="qth-item">
+                            <div class="qth-item-text">
+                                <span style="color:#ef4444;">📍</span> 
+                                <input type="text" class="qth-val-input" value="Metrô Butantã">
+                            </div>
+                            <button class="btn-exclude" onclick="this.parentElement.remove()">Excluir</button>
+                        </div>
                         <div class="add-qth-form">
                             <input type="text" class="add-qth-input" placeholder="Adicionar novo endereço/QTH...">
                             <button class="btn-add-qth" onclick="addQthToAisp(this)">+ Add</button>
