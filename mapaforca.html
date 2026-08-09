@@ -375,12 +375,19 @@
         }
         .qth-item {
             display: flex;
+            flex-direction: column;
+            background: #f8fafc;
+            padding: 10px 12px;
+            border-radius: 6px;
+            gap: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        .qth-item-row {
+            display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #f8fafc;
-            padding: 8px 12px;
-            border-radius: 6px;
             gap: 8px;
+            width: 100%;
         }
         .qth-item-text {
             display: flex;
@@ -405,13 +412,55 @@
             border-color: var(--primary-light);
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
         }
+        .qth-links-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 26px;
+        }
+        .btn-maps-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #2563eb;
+            text-decoration: none;
+            background: #eff6ff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid #bfdbfe;
+            transition: background 0.2s;
+        }
+        .btn-maps-link:hover {
+            background: #dbeafe;
+        }
+        .btn-maps-link svg {
+            width: 13px;
+            height: 13px;
+            fill: currentColor;
+        }
         .btn-exclude {
             color: #ef4444;
             font-weight: 700;
             font-size: 0.8rem;
             cursor: pointer;
             border: none;
-            background: transparent;
+            background: #fee2e2;
+            padding: 5px 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: background 0.2s;
+        }
+        .btn-exclude:hover {
+            background: #fecaca;
+        }
+        .btn-exclude svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
         }
         .add-qth-form {
             display: flex;
@@ -719,18 +768,40 @@
                     </div>
                     <div class="aisp-body" style="display: none;">
                         <div class="qth-item">
-                            <div class="qth-item-text">
-                                <span style="color:#ef4444;">📍</span> 
-                                <input type="text" class="qth-val-input" value="Estrada de Itapecerica, 1420">
+                            <div class="qth-item-row">
+                                <div class="qth-item-text">
+                                    <span style="color:#ef4444;">📍</span> 
+                                    <input type="text" class="qth-val-input" value="Estrada de Itapecerica, 1420" oninput="updateItemMapsLink(this)">
+                                </div>
+                                <button class="btn-exclude" onclick="this.closest('.qth-item').remove()">
+                                    <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                                    Excluir
+                                </button>
                             </div>
-                            <button class="btn-exclude" onclick="this.parentElement.remove()">Excluir</button>
+                            <div class="qth-links-row">
+                                <a href="https://www.google.com/maps/search/?api=1&query=Estrada+de+Itapecerica,+1420" target="_blank" class="btn-maps-link">
+                                    <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                                    Abrir no Google Maps
+                                </a>
+                            </div>
                         </div>
                         <div class="qth-item">
-                            <div class="qth-item-text">
-                                <span style="color:#ef4444;">📍</span> 
-                                <input type="text" class="qth-val-input" value="Estrada de Itapecerica, 1300">
+                            <div class="qth-item-row">
+                                <div class="qth-item-text">
+                                    <span style="color:#ef4444;">📍</span> 
+                                    <input type="text" class="qth-val-input" value="Estrada de Itapecerica, 1300" oninput="updateItemMapsLink(this)">
+                                </div>
+                                <button class="btn-exclude" onclick="this.closest('.qth-item').remove()">
+                                    <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                                    Excluir
+                                </button>
                             </div>
-                            <button class="btn-exclude" onclick="this.parentElement.remove()">Excluir</button>
+                            <div class="qth-links-row">
+                                <a href="https://www.google.com/maps/search/?api=1&query=Estrada+de+Itapecerica,+1300" target="_blank" class="btn-maps-link">
+                                    <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                                    Abrir no Google Maps
+                                </a>
+                            </div>
                         </div>
                         <div class="add-qth-form">
                             <input type="text" class="add-qth-input" placeholder="Adicionar novo endereço/QTH...">
@@ -742,7 +813,7 @@
                     </div>
                 </div>
 
-                <!-- Item 2 - Butantã (Preenchido com Metrô Vila Sônia, Metrô São Paulo Morumbi, Metrô Butantã) -->
+                <!-- Item 2 - Butantã -->
                 <div class="aisp-card" data-aisp="aisp-butanta">
                     <div class="aisp-header" onclick="toggleAispBody(this)">
                         <div>
@@ -753,25 +824,58 @@
                     </div>
                     <div class="aisp-body" style="display: none;">
                         <div class="qth-item">
-                            <div class="qth-item-text">
-                                <span style="color:#ef4444;">📍</span> 
-                                <input type="text" class="qth-val-input" value="Metrô Vila Sônia">
+                            <div class="qth-item-row">
+                                <div class="qth-item-text">
+                                    <span style="color:#ef4444;">📍</span> 
+                                    <input type="text" class="qth-val-input" value="Metrô Vila Sônia" oninput="updateItemMapsLink(this)">
+                                </div>
+                                <button class="btn-exclude" onclick="this.closest('.qth-item').remove()">
+                                    <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                                    Excluir
+                                </button>
                             </div>
-                            <button class="btn-exclude" onclick="this.parentElement.remove()">Excluir</button>
+                            <div class="qth-links-row">
+                                <a href="https://www.google.com/maps/search/?api=1&query=Metr%C3%B4+Vila+S%C3%B4nia" target="_blank" class="btn-maps-link">
+                                    <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                                    Abrir no Google Maps
+                                </a>
+                            </div>
                         </div>
                         <div class="qth-item">
-                            <div class="qth-item-text">
-                                <span style="color:#ef4444;">📍</span> 
-                                <input type="text" class="qth-val-input" value="Metrô São Paulo Morumbi">
+                            <div class="qth-item-row">
+                                <div class="qth-item-text">
+                                    <span style="color:#ef4444;">📍</span> 
+                                    <input type="text" class="qth-val-input" value="Metrô São Paulo Morumbi" oninput="updateItemMapsLink(this)">
+                                </div>
+                                <button class="btn-exclude" onclick="this.closest('.qth-item').remove()">
+                                    <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                                    Excluir
+                                </button>
                             </div>
-                            <button class="btn-exclude" onclick="this.parentElement.remove()">Excluir</button>
+                            <div class="qth-links-row">
+                                <a href="https://www.google.com/maps/search/?api=1&query=Metr%C3%B4+S%C3%A3o+Paulo+Morumbi" target="_blank" class="btn-maps-link">
+                                    <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                                    Abrir no Google Maps
+                                </a>
+                            </div>
                         </div>
                         <div class="qth-item">
-                            <div class="qth-item-text">
-                                <span style="color:#ef4444;">📍</span> 
-                                <input type="text" class="qth-val-input" value="Metrô Butantã">
+                            <div class="qth-item-row">
+                                <div class="qth-item-text">
+                                    <span style="color:#ef4444;">📍</span> 
+                                    <input type="text" class="qth-val-input" value="Metrô Butantã" oninput="updateItemMapsLink(this)">
+                                </div>
+                                <button class="btn-exclude" onclick="this.closest('.qth-item').remove()">
+                                    <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                                    Excluir
+                                </button>
                             </div>
-                            <button class="btn-exclude" onclick="this.parentElement.remove()">Excluir</button>
+                            <div class="qth-links-row">
+                                <a href="https://www.google.com/maps/search/?api=1&query=Metr%C3%B4+Butant%C3%A3" target="_blank" class="btn-maps-link">
+                                    <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                                    Abrir no Google Maps
+                                </a>
+                            </div>
                         </div>
                         <div class="add-qth-form">
                             <input type="text" class="add-qth-input" placeholder="Adicionar novo endereço/QTH...">
@@ -902,27 +1006,59 @@
         }
     }
 
+    function updateItemMapsLink(inputElem) {
+        const qthItem = inputElem.closest('.qth-item');
+        let linkElem = qthItem.querySelector('.btn-maps-link');
+        const text = inputElem.value.trim();
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(text)}`;
+
+        if (!linkElem) {
+            const linksRow = document.createElement('div');
+            linksRow.className = 'qth-links-row';
+            linksRow.innerHTML = `
+                <a href="${mapsUrl}" target="_blank" class="btn-maps-link">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                    Abrir no Google Maps
+                </a>
+            `;
+            qthItem.appendChild(linksRow);
+        } else {
+            linkElem.href = mapsUrl;
+        }
+    }
+
     function addQthToAisp(buttonElem) {
         const form = buttonElem.parentElement;
         const input = form.querySelector('.add-qth-input');
         const text = input.value.trim();
         if (!text) return;
 
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(text)}`;
         const newItem = document.createElement('div');
         newItem.className = 'qth-item';
         newItem.innerHTML = `
-            <div class="qth-item-text">
-                <span style="color:#ef4444;">📍</span> 
-                <input type="text" class="qth-val-input" value="${text}">
+            <div class="qth-item-row">
+                <div class="qth-item-text">
+                    <span style="color:#ef4444;">📍</span> 
+                    <input type="text" class="qth-val-input" value="${text}" oninput="updateItemMapsLink(this)">
+                </div>
+                <button class="btn-exclude" onclick="this.closest('.qth-item').remove()">
+                    <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                    Excluir
+                </button>
             </div>
-            <button class="btn-exclude" onclick="this.parentElement.remove()">Excluir</button>
+            <div class="qth-links-row">
+                <a href="${mapsUrl}" target="_blank" class="btn-maps-link">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                    Abrir no Google Maps
+                </a>
+            </div>
         `;
 
         form.parentElement.insertBefore(newItem, form);
         input.value = '';
     }
 
-    /* FUNÇÃO ATUALIZADA: Distribui cada endereço individualmente entre os CPPs sequenciais lendo os inputs editáveis */
     function copyAispAddressesToCPP(buttonElem) {
         const aispBody = buttonElem.parentElement;
         const qthInputs = aispBody.querySelectorAll('.qth-val-input');
@@ -1842,7 +1978,6 @@
             const modalEscalaId = document.getElementById('modal-escala-id');
             if (modalEscalaId) modalEscalaId.value = '';
 
-            document.getElementById('search-input').value, value = '';
             document.getElementById('search-input').value = '';
             document.getElementById('results-area').style.display = 'none';
             document.getElementById('file-input').value = '';
