@@ -380,6 +380,7 @@
             background: #f8fafc;
             padding: 8px 12px;
             border-radius: 6px;
+            gap: 8px;
         }
         .qth-item-text {
             display: flex;
@@ -388,6 +389,21 @@
             font-size: 0.9rem;
             font-weight: 700;
             color: #334155;
+            flex: 1;
+        }
+        .qth-val-input {
+            flex: 1;
+            padding: 4px 8px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: white;
+        }
+        .qth-val-input:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
         }
         .btn-exclude {
             color: #ef4444;
@@ -704,13 +720,15 @@
                     <div class="aisp-body" style="display: none;">
                         <div class="qth-item">
                             <div class="qth-item-text">
-                                <span style="color:#ef4444;">📍</span> <span class="qth-val">Estrada de Itapecerica, 1420</span>
+                                <span style="color:#ef4444;">📍</span> 
+                                <input type="text" class="qth-val-input" value="Estrada de Itapecerica, 1420">
                             </div>
                             <button class="btn-exclude" onclick="this.parentElement.remove()">Excluir</button>
                         </div>
                         <div class="qth-item">
                             <div class="qth-item-text">
-                                <span style="color:#ef4444;">📍</span> <span class="qth-val">Estrada de Itapecerica, 1300</span>
+                                <span style="color:#ef4444;">📍</span> 
+                                <input type="text" class="qth-val-input" value="Estrada de Itapecerica, 1300">
                             </div>
                             <button class="btn-exclude" onclick="this.parentElement.remove()">Excluir</button>
                         </div>
@@ -873,7 +891,8 @@
         newItem.className = 'qth-item';
         newItem.innerHTML = `
             <div class="qth-item-text">
-                <span style="color:#ef4444;">📍</span> <span class="qth-val">${text}</span>
+                <span style="color:#ef4444;">📍</span> 
+                <input type="text" class="qth-val-input" value="${text}">
             </div>
             <button class="btn-exclude" onclick="this.parentElement.remove()">Excluir</button>
         `;
@@ -882,17 +901,22 @@
         input.value = '';
     }
 
-    /* FUNÇÃO ATUALIZADA: Distribui cada endereço individualmente entre os CPPs sequenciais */
+    /* FUNÇÃO ATUALIZADA: Distribui cada endereço individualmente entre os CPPs sequenciais lendo os inputs editáveis */
     function copyAispAddressesToCPP(buttonElem) {
         const aispBody = buttonElem.parentElement;
-        const qthElements = aispBody.querySelectorAll('.qth-val');
+        const qthInputs = aispBody.querySelectorAll('.qth-val-input');
         
-        if (qthElements.length === 0) {
+        if (qthInputs.length === 0) {
             alert('Não há endereços cadastrados nesta AISP.');
             return;
         }
 
-        const addresses = Array.from(qthElements).map(el => el.innerText.trim());
+        const addresses = Array.from(qthInputs).map(input => input.value.trim()).filter(val => val !== '');
+
+        if (addresses.length === 0) {
+            alert('Todos os campos de endereços estão vazios.');
+            return;
+        }
 
         const startCppNumber = prompt(`Existem ${addresses.length} endereço(s). A partir de qual CPP deseja começar a inserir?`, '1');
         if (!startCppNumber) return;
@@ -1797,6 +1821,7 @@
             const modalEscalaId = document.getElementById('modal-escala-id');
             if (modalEscalaId) modalEscalaId.value = '';
 
+            document.getElementById('search-input').value, value = '';
             document.getElementById('search-input').value = '';
             document.getElementById('results-area').style.display = 'none';
             document.getElementById('file-input').value = '';
