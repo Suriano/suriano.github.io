@@ -91,10 +91,18 @@
         }
         .btn-catalog-modal:hover { background-color: #2563eb; }
 
+        .btn-faltas-modal {
+            background-color: #d97706; color: white; border: none; padding: 10px 18px;
+            font-weight: 700; border-radius: 8px; cursor: pointer; font-size: 0.95rem;
+            display: flex; align-items: center; gap: 8px; transition: background 0.2s;
+        }
+        .btn-faltas-modal:hover { background-color: #b45309; }
+
         .btn-lines-modal svg,
         .btn-clear svg,
         .btn-print svg,
-        .btn-catalog-modal svg {
+        .btn-catalog-modal svg,
+        .btn-faltas-modal svg {
             width: 18px;
             height: 18px;
             fill: currentColor;
@@ -293,7 +301,7 @@
             font-weight: 700;
             color: var(--primary-dark);
         }
-        .form-group input {
+        .form-group input, .form-group textarea {
             width: 100%;
             padding: 8px 12px;
             border: 1px solid var(--border-color);
@@ -302,7 +310,7 @@
             font-weight: 600;
             background: #f8fafc;
         }
-        .form-group input:focus {
+        .form-group input:focus, .form-group textarea:focus {
             outline: none;
             border-color: var(--primary-light);
             background: white;
@@ -527,7 +535,7 @@
         @media print {
             body { background: white; padding: 0; overflow: visible !important; }
             .container { max-width: 100%; }
-            .upload-section, .btn-print, .btn-clear, .btn-lines-modal, .btn-catalog-modal, .btn-add-cpp, .btn-remove-cpp, #raw-text-card, .instructions-text, .presence-btn, .search-box, .cpp-select, footer, .modal-overlay { display: none !important; }
+            .upload-section, .btn-print, .btn-clear, .btn-lines-modal, .btn-catalog-modal, .btn-faltas-modal, .btn-add-cpp, .btn-remove-cpp, #raw-text-card, .instructions-text, .presence-btn, .search-box, .cpp-select, footer, .modal-overlay { display: none !important; }
             header { background: none; color: black; padding: 0; border-bottom: 2px solid #000; margin-bottom: 15px; }
             header h1 { font-size: 1.4rem; color: black; }
             header p { color: #333; }
@@ -558,6 +566,12 @@
                     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                 </svg>
                 AISP Cadastrados
+            </button>
+            <button class="btn-faltas-modal" onclick="openFaltasModal()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
+                </svg>
+                Parte de Faltas
             </button>
             <button class="btn-lines-modal" onclick="openPDFLinesModal()">
                 <svg viewBox="0 0 24 24">
@@ -653,6 +667,30 @@
         <div class="card" id="raw-text-card">
             <div class="card-title" style="margin-bottom: 12px; border-bottom: 2px solid var(--bg-body); padding-bottom: 6px;"> Conteúdo Bruto Extraído</div>
             <div class="raw-text-box" id="raw-text-content" style="background:#0f172a; color:#38bdf8; padding:12px; border-radius:6px; font-family:monospace; font-size:0.8rem; max-height:200px; overflow-y:auto;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Parte de Faltas (Igual RelModelo) -->
+<div class="modal-overlay" id="faltas-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2> Parte de Faltas (RelModelo)</h2>
+            <button class="btn-close-modal" onclick="closeFaltasModal()">✖</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="faltas-textarea"> Texto Editável (Ausentes):</label>
+                <textarea id="faltas-textarea" rows="12" style="font-family: monospace; font-size: 0.85rem;" oninput="updateFaltasHtmlPreview()"></textarea>
+            </div>
+            <div class="form-group">
+                <label> HTML Completo Gerado:</label>
+                <div id="faltas-html-preview" style="background:#0f172a; color:#38bdf8; padding:12px; border-radius:6px; font-family:monospace; font-size:0.8rem; max-height:180px; overflow-y:auto; word-break:break-all;"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal-action btn-modal-copy" onclick="copyFaltasText()"> Copiar Texto</button>
+            <button class="btn-modal-action" style="background-color: #0284c7; color: white;" onclick="copyFaltasHtml()"> Copiar HTML Completo</button>
         </div>
     </div>
 </div>
@@ -992,6 +1030,60 @@
 
     function closeCatalogModal() {
         document.getElementById('catalog-modal').classList.remove('active');
+    }
+
+    function openFaltasModal() {
+        const ausentes = policeDatabase.filter(p => !p.presente);
+        let ausentesText = '';
+        if (ausentes.length > 0) {
+            ausentesText = ausentes.map(p => `- ${p.rankLine} ${p.nome}`).join('\n');
+        } else {
+            ausentesText = '- Nenhum policial ausente registrado.';
+        }
+
+        const cmdName = localStorage.getItem(STORAGE_COMANDANTE) || '1º SGT PM Comandante';
+        const modeloTexto = `SECRETARIA DA SEGURANÇA PÚBLICA\nPOLÍCIA MILITAR DO ESTADO DE SÃO PAULO\n\nAssunto: Parte de Faltas - Atividade DEJEM.\n\n1. Informo a V.S.ª que, em relação ao serviço da Atividade DEJEM nesta data, constataram-se os seguintes ausentes:\n\n${ausentesText}\n\n${cmdName}\nCmt da DEJEM`;
+
+        document.getElementById('faltas-textarea').value = modeloTexto;
+        updateFaltasHtmlPreview();
+        document.getElementById('faltas-modal').classList.add('active');
+    }
+
+    function closeFaltasModal() {
+        document.getElementById('faltas-modal').classList.remove('active');
+    }
+
+    function updateFaltasHtmlPreview() {
+        const textVal = document.getElementById('faltas-textarea').value;
+        const escapedText = textVal.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+        const fullHtml = `<!DOCTYPE html>\n<html lang="pt-BR">\n<head>\n    <meta charset="UTF-8">\n    <title>Parte de Faltas</title>\n</head>\n<body style="font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; color: #1e293b;">\n    <div style="max-width: 800px; margin: 0 auto;">\n        ${escapedText}\n    </div>\n</body>\n</html>`;
+        document.getElementById('faltas-html-preview').innerText = fullHtml;
+    }
+
+    function copyFaltasText() {
+        const textVal = document.getElementById('faltas-textarea').value;
+        if (!textVal) {
+            alert('Não há texto para copiar.');
+            return;
+        }
+        navigator.clipboard.writeText(textVal).then(() => {
+            alert('Texto copiado com sucesso!');
+        }).catch(() => {
+            fallbackCopyText(textVal);
+        });
+    }
+
+    function copyFaltasHtml() {
+        const htmlVal = document.getElementById('faltas-html-preview').innerText;
+        if (!htmlVal) {
+            alert('Não há HTML para copiar.');
+            return;
+        }
+        navigator.clipboard.writeText(htmlVal).then(() => {
+            alert('HTML completo copiado com sucesso!');
+        }).catch(() => {
+            fallbackCopyText(htmlVal);
+        });
     }
 
     function toggleAispBody(headerElem) {
@@ -1785,7 +1877,6 @@
 
         msg += `*Comandante:* ${cmdName}\nTel: ${phone || 'Não informado'}\n`;
 
-        // Tratamento para trazer no final da mensagem apenas os CPPs que possuem policiais neles
         const qthStorage = localStorage.getItem(STORAGE_QTH);
         let qthObj = {};
         if (qthStorage) {
@@ -1897,10 +1988,10 @@
     }
 
     function showStatus(msg, type) {
-        const status = document.getElementById('status-msg');
-        status.innerText = msg;
-        status.className = `status-alert status-${type}`;
-        status.style.display = 'block';
+        const statusElem = document.getElementById('status-msg');
+        statusElem.innerText = msg;
+        statusElem.className = `status-alert status-${type}`;
+        statusElem.style.display = 'block';
     }
 
     function hideStatus() {
@@ -1912,64 +2003,42 @@
     }
 
     function saveQTHsToLocalStorage() {
-        const qthObj = {};
+        let qthObj = {};
         stationsList.forEach(stId => {
             const input = document.getElementById(`input-qth-${stId}`);
-            if (input) {
-                qthObj[stId] = input.value;
-            }
+            if (input) qthObj[stId] = input.value;
         });
         localStorage.setItem(STORAGE_QTH, JSON.stringify(qthObj));
-        renderKanban(); // Atualiza os selects ao modificar o QTH
     }
 
     function saveAllToLocalStorage() {
         savePoliceToLocalStorage();
         saveQTHsToLocalStorage();
-        saveStationsList();
-        localStorage.setItem(STORAGE_INFO, generalInfoHTML);
         localStorage.setItem(STORAGE_RAW, rawTextHTML);
-        localStorage.setItem(STORAGE_ESCALA_ID, currentEscalaID);
     }
 
     function loadFromLocalStorage() {
         const savedPolice = localStorage.getItem(STORAGE_POLICE);
         const savedQTH = localStorage.getItem(STORAGE_QTH);
-        const savedInfo = localStorage.getItem(STORAGE_INFO);
         const savedRaw = localStorage.getItem(STORAGE_RAW);
-        const savedPhone = localStorage.getItem(STORAGE_CMD_PHONE) || '';
-        const savedTipo = localStorage.getItem(STORAGE_ESCALA_TIPO) || '';
-        const savedCmd = localStorage.getItem(STORAGE_COMANDANTE) || '';
-        const savedEscalaID = localStorage.getItem(STORAGE_ESCALA_ID) || 'Não especificado';
+        const savedId = localStorage.getItem(STORAGE_ESCALA_ID);
 
-        if (savedPolice && savedPolice !== '[]') {
-            policeDatabase = JSON.parse(savedPolice);
-            generalInfoHTML = savedInfo || '';
-            rawTextHTML = savedRaw || '';
-            currentEscalaID = savedEscalaID;
+        if (savedId) currentEscalaID = savedId;
 
-            document.getElementById('general-info-grid').innerHTML = generalInfoHTML;
-            document.getElementById('raw-text-content').innerText = rawTextHTML;
+        if (savedPolice) {
+            try {
+                policeDatabase = JSON.parse(savedPolice);
+            } catch(e) { policeDatabase = []; }
+        }
 
-            const phoneInput = document.getElementById('input-cmd-phone');
-            if (phoneInput) {
-                phoneInput.value = savedPhone;
-                handleCmdPhoneInput(savedPhone);
-            }
+        if (savedRaw) {
+            rawTextHTML = savedRaw;
+            const rawBox = document.getElementById('raw-text-content');
+            if (rawBox) rawBox.innerText = savedRaw;
+        }
 
-            const tipoInput = document.getElementById('input-escala-tipo');
-            if (tipoInput) {
-                tipoInput.value = savedTipo;
-                handleEscalaTipoInput(savedTipo);
-            }
-
-            const cmdInput = document.getElementById('input-comandante');
-            if (cmdInput) {
-                cmdInput.value = savedCmd;
-                handleComandanteInput(savedCmd);
-            }
-
-            if (savedQTH) {
+        if (savedQTH) {
+            try {
                 const qthObj = JSON.parse(savedQTH);
                 stationsList.forEach(stId => {
                     const val = qthObj[stId] || '';
@@ -1979,54 +2048,29 @@
                         updateQTHPrint(stId, val);
                     }
                 });
-            }
+            } catch(e){}
+        }
 
+        if (policeDatabase.length > 0) {
+            renderGeneralInfo(
+                currentEscalaID,
+                localStorage.getItem(STORAGE_ESCALA_TIPO) || 'Não especificado',
+                'Salvo no Navegador',
+                'Salvo',
+                'Salvo',
+                localStorage.getItem(STORAGE_COMANDANTE) || 'Não informado'
+            );
             renderKanban();
             document.getElementById('results-area').style.display = 'block';
         }
     }
 
     function clearSavedData() {
-        if (confirm('Tem certeza de que deseja limpar todos os dados salvos nesta escala?')) {
-            localStorage.removeItem(STORAGE_POLICE);
-            localStorage.removeItem(STORAGE_QTH);
-            localStorage.removeItem(STORAGE_INFO);
-            localStorage.removeItem(STORAGE_RAW);
-            localStorage.removeItem(STORAGE_CMD_PHONE);
-            localStorage.removeItem(STORAGE_ESCALA_TIPO);
-            localStorage.removeItem(STORAGE_COMANDANTE);
-            localStorage.removeItem(STORAGE_STATIONS);
-            localStorage.removeItem(STORAGE_ESCALA_ID);
-
-            policeDatabase = [];
-            currentEscalaID = 'Não especificado';
-            stationsList = Array.from({length: 10}, (_, i) => `cpp${i + 1}`);
-            initKanbanColumns();
-
-            const phoneInput = document.getElementById('input-cmd-phone');
-            if (phoneInput) phoneInput.value = '';
-
-            const modalPhoneInput = document.getElementById('modal-cmd-phone');
-            if (modalPhoneInput) modalPhoneInput.value = '';
-
-            const tipoInput = document.getElementById('input-escala-tipo');
-            if (tipoInput) tipoInput.value = '';
-
-            const cmdInput = document.getElementById('input-comandante');
-            if (cmdInput) cmdInput.value = '';
-
-            const modalCmdInput = document.getElementById('modal-comandante');
-            if (modalCmdInput) modalCmdInput.value = '';
-
-            const modalEscalaId = document.getElementById('modal-escala-id');
-            if (modalEscalaId) modalEscalaId.value = '';
-
-            document.getElementById('search-input').value = '';
-            document.getElementById('results-area').style.display = 'none';
-            document.getElementById('file-input').value = '';
+        if (confirm('Deseja realmente limpar todos os dados salvos?')) {
+            localStorage.clear();
+            location.reload();
         }
     }
 </script>
-
 </body>
 </html>
