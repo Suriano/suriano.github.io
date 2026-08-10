@@ -1785,6 +1785,43 @@
 
         msg += `*Comandante:* ${cmdName}\nTel: ${phone || 'Não informado'}\n`;
 
+        // Tratamento para trazer no final da mensagem apenas os CPPs que possuem policiais neles
+        const qthStorage = localStorage.getItem(STORAGE_QTH);
+        let qthObj = {};
+        if (qthStorage) {
+            try {
+                qthObj = JSON.parse(qthStorage);
+            } catch(e){}
+        }
+
+        let cppComPoliciais = [];
+        stationsList.forEach(stId => {
+            const policiaisNoCpp = policeDatabase.filter(p => p.estacao === stId);
+            if (policiaisNoCpp.length > 0) {
+                const num = stId.replace('cpp', '');
+                const qthVal = qthObj[stId] ? qthObj[stId].trim() : '';
+                cppComPoliciais.push({
+                    num: num,
+                    qth: qthVal,
+                    policiais: policiaisNoCpp
+                });
+            }
+        });
+
+        if (cppComPoliciais.length > 0) {
+            msg += `\n*DISTRIBUIÇÃO DE CPPs COM POLICIAIS:*\n`;
+            cppComPoliciais.forEach(cpp => {
+                msg += `\n*CPP ${cpp.num}*`;
+                if (cpp.qth) {
+                    msg += ` - QTH: ${cpp.qth}`;
+                }
+                msg += `\n`;
+                cpp.policiais.forEach(p => {
+                    msg += `- ${p.rankLine} ${p.nome}\n`;
+                });
+            });
+        }
+
         if (lineLast) msg += `\n${lineLast}\n`;
 
         const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`;
