@@ -1,0 +1,15 @@
+<html>
+<body>
+<form  method="post" action="/" enctype="multipart/form-data">
+    <input type="text" name="title" class="form-control" id="exampleFormControlInput1" placeholder="Titulo">
+    <textarea class="form-control" name="text" id="exampleFormControlTextarea1" rows="3"></textarea>
+ 
+    <button type="submit" name="addSubmit" >Enviar</button>
+  </form>
+//Abaixo o CDN do CKEditor
+<script src="https://cdn.ckeditor.com/4.5.10/full/ckeditor.js"></script>
+<script type="text/javascript">
+      CKEDITOR.replace( 'exampleFormControlTextarea1' );
+</script>
+</body>
+</html>
