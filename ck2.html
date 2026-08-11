@@ -1,22 +1,15 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="utf-8">
-    <title>Exemplo CKEditor 4 - Full Preset</title>
-    <!-- Carrega o CKEditor 4 Full via CDN -->
-    <script src="https://ckeditor.com"></script>
-</head>
+<html>
 <body>
-    <form>
-        <textarea name="editor1" id="editor1" rows="10" cols="80">
-            Este é um texto inicial no <strong>CKEditor 4</strong> (Full Preset).
-        </textarea>
-        <script>
-            // Substitui o textarea pelo editor completo
-            CKEDITOR.replace('editor1', {
-                height: 400
-            });
-        </script>
-    </form>
+<form  method="post" action="/" enctype="multipart/form-data">
+    <input type="text" name="title" class="form-control" id="exampleFormControlInput1" placeholder="Titulo">
+    <textarea class="form-control" name="text" id="exampleFormControlTextarea1" rows="3"></textarea>
+ 
+    <button type="submit" name="addSubmit" >Enviar</button>
+  </form>
+//Abaixo o CDN do CKEditor
+<script src="https://cdn.ckeditor.com/4.5.10/full/ckeditor.js"></script>
+<script type="text/javascript">
+      CKEDITOR.replace( 'exampleFormControlTextarea1' );
+</script>
 </body>
 </html>
