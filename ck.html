@@ -1,43 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CKEditor 5 Example</title>
-    <!-- 1. Load CKEditor 5 from CDN -->
-    <link rel="stylesheet" href="https://ckeditor.com">
+    <title>Exemplo CKEditor</title>
+    <!-- Inclusão do CKEditor via CDN (versão 4 LTS) -->
+    <script src="https://ckeditor.com"></script>
 </head>
 <body>
 
-    <h1>My CKEditor 5 Instance</h1>
+    <h1>Meu Editor de Texto</h1>
+    
+    <!-- Textarea que será transformado em editor -->
+    <textarea name="editor1" id="editor1"></textarea>
 
-    <!-- 2. Create the target container element -->
-    <div id="editor">
-        <p>Hello from <strong>CKEditor 5</strong>!</p>
-    </div>
-
-    <!-- 3. Load the JS file and initialize the editor -->
-    <script type="importmap">
-        {
-            "imports": {
-                "ckeditor5": "https://ckeditor.com"
-            }
-        }
-    </script>
-    <script type="module">
-        import { ClassicEditor, Essentials, Paragraph, Bold, Italic } from 'ckeditor5';
-
-        ClassicEditor
-            .create(document.querySelector('#editor'), {
-                plugins: [ Essentials, Paragraph, Bold, Italic ],
-                toolbar: [ 'undo', 'redo', '|', 'bold', 'italic' ]
-            })
-            .then(editor => {
-                console.log('Editor initialized successfully', editor);
-            })
-            .catch(error => {
-                console.error('Error initializing editor:', error);
-            });
+    <script>
+        // Ativa o CKEditor no textarea com o id 'editor1'
+        CKEDITOR.replace('editor1');
     </script>
 
 </body>
