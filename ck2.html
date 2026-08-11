@@ -1,29 +1,22 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>CKEditor com Todos os Controles</title>
-    <!-- Importa o CKEditor 4 com o pacote FULL via CDN oficial -->
+    <meta charset="utf-8">
+    <title>Exemplo CKEditor 4 - Full Preset</title>
+    <!-- Carrega o CKEditor 4 Full via CDN -->
     <script src="https://ckeditor.com"></script>
 </head>
 <body>
-
-    <div style="max-width: 900px; margin: 20px auto;">
-        <h2>Editor de Texto Completo</h2>
-        <!-- O textarea que será transformado pelo CKEditor -->
-        <textarea name="editor_completo" id="editor1">
-            <p>Este editor possui <strong>todos</strong> os botões e ferramentas habilitados por padrão.</p>
+    <form>
+        <textarea name="editor1" id="editor1" rows="10" cols="80">
+            Este é um texto inicial no <strong>CKEditor 4</strong> (Full Preset).
         </textarea>
-    </div>
-
-    <script>
-        // Substitui o textarea pelo editor configurando o idioma para Português
-        CKEDITOR.replace('editor1', {
-            language: 'pt-br',
-            // Garante que nenhuma tag HTML5 inserida manualmente seja filtrada ou apagada
-            allowedContent: true 
-        });
-    </script>
-
+        <script>
+            // Substitui o textarea pelo editor completo
+            CKEDITOR.replace('editor1', {
+                height: 400
+            });
+        </script>
+    </form>
 </body>
 </html>
