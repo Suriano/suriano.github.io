@@ -671,7 +671,7 @@
     </div>
 </div>
 
-<!-- Modal para Parte de Faltas (Igual RelModelo) -->
+<!-- Modal para Parte de Faltas (RelModelo) -->
 <div class="modal-overlay" id="faltas-modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -1038,7 +1038,7 @@
         }
 
         const cmdName = localStorage.getItem(STORAGE_COMANDANTE) || '1º SGT PM Comandante';
-        const modeloTexto = `SECRETARIA DA SEGURANÇA PÚBLICA\nPOLÍCIA MILITAR DO ESTADO DE SÃO PAULO\n\nAssunto: Parte de Faltas - Atividade DEJEM.\n\n1. Informo a V.S.ª que, em relação ao serviço da Atividade DEJEM nesta data, constataram-se os seguintes ausentes:\n\n${ausentesText}\n\n${cmdName}\nCmt da DEJEM`;
+        const modeloTexto = `SECRETARIA DA SEGURANÇA PÚBLICA\nPOLÍCIA MILITAR DO ESTADO DE SÃO PAULO\n\nSão Paulo, 11 de agosto de 2026.\nPARTE Nº CPAM1-xxxxx/301.18/26\nDo Cmt Op FCA “Rua Tiers – Vautier e Imediações”\nAo Sr. Ch Div Op CPA/M-1.\nAssunto: Falta ao serviço.\nReferência: Relatório de Presença de Escala ID nº ${currentEscalaID || 'xxxxx'}.\n\nComunico a V. S.ª que nesta data:\n\n${ausentesText}\n\nfaltou ao serviço para o qual se encontrava prévia e nominalmente escalado.\n\nEsclareço que o policial militar não entrou em contato informando o motivo de sua falta ao serviço.\n\n${cmdName}\nCmt da DEJEM`;
 
         document.getElementById('faltas-textarea').value = modeloTexto;
         document.getElementById('faltas-modal').classList.add('active');
