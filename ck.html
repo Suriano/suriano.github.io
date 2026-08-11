@@ -2,21 +2,23 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Exemplo CKEditor</title>
-    <!-- Inclusão do CKEditor via CDN (versão 4 LTS) -->
-    <script src="https://ckeditor.com"></script>
+    <title>Exemplo de Editor de Texto</title>
+    <!-- Carrega o script do TinyMCE da nuvem (CDN) -->
+    <script src="https://cloudflare.com" referrerpolicy="origin"></script>
+    <script>
+        // Ativa o editor no elemento textarea com o id 'meu-editor'
+        tinymce.init({
+            selector: '#meu-editor',
+            language: 'pt_BR',
+            plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table',
+            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat'
+        });
+    </script>
 </head>
 <body>
-
-    <h1>Meu Editor de Texto</h1>
-    
-    <!-- Textarea que será transformado em editor -->
-    <textarea name="editor1" id="editor1"></textarea>
-
-    <script>
-        // Ativa o CKEditor no textarea com o id 'editor1'
-        CKEDITOR.replace('editor1');
-    </script>
-
+    <h1>Meu Formulário com Editor</h1>
+    <form method="POST">
+        <textarea id="meu-editor">Escreva seu texto aqui...</textarea>
+    </form>
 </body>
 </html>
