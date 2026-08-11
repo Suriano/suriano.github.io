@@ -2,25 +2,28 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Exemplo CKEditor</title>
-    <link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/48.4.0/ckeditor5.css" />
+    <title>CKEditor com Todos os Controles</title>
+    <!-- Importa o CKEditor 4 com o pacote FULL via CDN oficial -->
+    <script src="https://ckeditor.com"></script>
 </head>
 <body>
-    <textarea name="conteudo" id="editor">Texto inicial...</textarea>
 
-    <script src="https://cdn.ckeditor.com/ckeditor5/48.4.0/ckeditor5.umd.js"></script>
+    <div style="max-width: 900px; margin: 20px auto;">
+        <h2>Editor de Texto Completo</h2>
+        <!-- O textarea que será transformado pelo CKEditor -->
+        <textarea name="editor_completo" id="editor1">
+            <p>Este editor possui <strong>todos</strong> os botões e ferramentas habilitados por padrão.</p>
+        </textarea>
+    </div>
+
     <script>
-        const { ClassicEditor, Essentials, Paragraph, Bold, Italic } = CKEDITOR;
-
-        ClassicEditor
-            .create(document.querySelector('#editor'), {
-                licenseKey: 'GPL', // ou sua chave de licença
-                plugins: [Essentials, Paragraph, Bold, Italic],
-                toolbar: ['bold', 'italic']
-            })
-            .catch(error => {
-                console.error(error);
-            });
+        // Substitui o textarea pelo editor configurando o idioma para Português
+        CKEDITOR.replace('editor1', {
+            language: 'pt-br',
+            // Garante que nenhuma tag HTML5 inserida manualmente seja filtrada ou apagada
+            allowedContent: true 
+        });
     </script>
+
 </body>
 </html>
