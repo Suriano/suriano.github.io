@@ -1,15 +1,26 @@
-<html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Exemplo CKEditor</title>
+    <link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/48.4.0/ckeditor5.css" />
+</head>
 <body>
-<form  method="post" action="/" enctype="multipart/form-data">
-    <input type="text" name="title" class="form-control" id="exampleFormControlInput1" placeholder="Titulo">
-    <textarea class="form-control" name="text" id="exampleFormControlTextarea1" rows="3"></textarea>
- 
-    <button type="submit" name="addSubmit" >Enviar</button>
-  </form>
-//Abaixo o CDN do CKEditor    
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ckeditor5/44.3.0/ckeditor.js"></script>
-<script type="text/javascript">
-      CKEDITOR.replace( 'exampleFormControlTextarea1' );
-</script>
+    <textarea name="conteudo" id="editor">Texto inicial...</textarea>
+
+    <script src="https://cdn.ckeditor.com/ckeditor5/48.4.0/ckeditor5.umd.js"></script>
+    <script>
+        const { ClassicEditor, Essentials, Paragraph, Bold, Italic } = CKEDITOR;
+
+        ClassicEditor
+            .create(document.querySelector('#editor'), {
+                licenseKey: 'GPL', // ou sua chave de licença
+                plugins: [Essentials, Paragraph, Bold, Italic],
+                toolbar: ['bold', 'italic']
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    </script>
 </body>
 </html>
