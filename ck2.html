@@ -1,22 +1,121 @@
-<html>
-<body>
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor Estilo Word (Client-Side)</title>
+    <!-- Estilos do Quill (Tema Snowflake, parecido com processadores de texto) -->
+    <link href="https://jsdelivr.net" rel="stylesheet">
     <style>
-  .cke_notification_warning {
-    display: none !important;
-} 
-        </style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        #editor-container {
+            height: 350px;
+            background-color: #fff;
+        }
+        .actions {
+            margin-top: 15px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin-top: 15px;
+            font-family: monospace;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+    </style>
 </head>
-<form  method="post" action="/" enctype="multipart/form-data">
-    <input type="text" name="title" class="form-control" id="exampleFormControlInput1" placeholder="Titulo">
-    <textarea class="form-control" name="text" id="exampleFormControlTextarea1" rows="3"></textarea>
- 
-    <button type="submit" name="addSubmit" >Enviar</button>
-  </form>
-//Abaixo o CDN do CKEditor
-<script src="https://cdn.ckeditor.com/4.5.10/full/ckeditor.js"></script>
-<script type="text/javascript">
-      CKEDITOR.replace( 'exampleFormControlTextarea1' );
-</script>
+<body>
+
+    <h2>Editor de Texto com Imagem Embutida (HTML/Base64)</h2>
+    
+    <!-- Elemento onde o Quill será renderizado -->
+    <div id="editor-container"></div>
+
+    <div class="actions">
+        <button onclick="exportarHTML()">Ver Código HTML Gerado</button>
+    </div>
+
+    <h3>Código HTML Resultante:</h3>
+    <!-- Campo para visualizar o HTML bruto gerado -->
+    <textarea id="html-output" readonly placeholder="O código HTML com as imagens embutidas aparecerá aqui ao clicar no botão..."></textarea>
+
+    <!-- Scripts do Quill -->
+    <script src="https://jsdelivr.net"></script>
+    <script>
+        // 1. Configura as opções da barra de ferramentas (estilo Word)
+        const toolbarOptions = [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],        // Formatação de texto
+            [{ 'color': [] }, { 'background': [] }],          // Cores de fonte e fundo
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],     // Listas
+            [{ 'align': [] }],                                // Alinhamento
+            ['link', 'image'],                                // Links e Imagens
+            ['clean']                                         // Botão de limpar formatação
+        ];
+
+        // 2. Inicializa o editor Quill
+        const quill = new Quill('#editor-container', {
+            modules: {
+                toolbar: toolbarOptions
+            },
+            theme: 'snowflake'
+        });
+
+        // 3. Customiza o comportamento do botão de Imagem para rodar estritamente no Client-Side
+        const toolbar = quill.getModule('toolbar');
+        toolbar.addHandler('image', () => {
+            // Cria um input de arquivo temporário via JS
+            const input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*');
+            input.click();
+
+            // Quando o usuário selecionar a imagem:
+            input.onchange = () => {
+                const file = input.files[0];
+                
+                if (file) {
+                    const reader = new FileReader();
+                    
+                    // Converte a imagem em uma string Base64 (data URL)
+                    reader.onload = (e) => {
+                        const base64Url = e.target.result;
+                        
+                        // Pega a posição atual do cursor no editor
+                        const range = quill.getSelection();
+                        
+                        // Insere a imagem embutida diretamente na posição do cursor
+                        quill.insertEmbed(range.index, 'image', base64Url);
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+            };
+        });
+
+        // 4. Função para pegar o HTML puro gerating pelo Quill
+        function exportarHTML() {
+            const htmlContent = quill.getSemanticHTML();
+            document.getElementById('html-output').value = htmlContent;
+        }
+    </script>
 </body>
 </html>
