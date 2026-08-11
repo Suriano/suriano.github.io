@@ -681,16 +681,12 @@
         <div class="modal-body">
             <div class="form-group">
                 <label for="faltas-textarea"> Texto Editável (Ausentes):</label>
-                <textarea id="faltas-textarea" rows="12" style="font-family: monospace; font-size: 0.85rem;" oninput="updateFaltasHtmlPreview()"></textarea>
-            </div>
-            <div class="form-group">
-                <label> HTML Completo Gerado:</label>
-                <div id="faltas-html-preview" style="background:#0f172a; color:#38bdf8; padding:12px; border-radius:6px; font-family:monospace; font-size:0.8rem; max-height:180px; overflow-y:auto; word-break:break-all;"></div>
+                <textarea id="faltas-textarea" rows="12" style="font-family: monospace; font-size: 0.85rem;"></textarea>
             </div>
         </div>
         <div class="modal-footer">
             <button class="btn-modal-action btn-modal-copy" onclick="copyFaltasText()"> Copiar Texto</button>
-            <button class="btn-modal-action" style="background-color: #0284c7; color: white;" onclick="copyFaltasHtml()"> Copiar HTML Completo</button>
+            <button class="btn-modal-action" style="background-color: #64748b; color: white;" onclick="closeFaltasModal()">Fechar</button>
         </div>
     </div>
 </div>
@@ -1045,19 +1041,11 @@
         const modeloTexto = `SECRETARIA DA SEGURANÇA PÚBLICA\nPOLÍCIA MILITAR DO ESTADO DE SÃO PAULO\n\nAssunto: Parte de Faltas - Atividade DEJEM.\n\n1. Informo a V.S.ª que, em relação ao serviço da Atividade DEJEM nesta data, constataram-se os seguintes ausentes:\n\n${ausentesText}\n\n${cmdName}\nCmt da DEJEM`;
 
         document.getElementById('faltas-textarea').value = modeloTexto;
-        updateFaltasHtmlPreview();
         document.getElementById('faltas-modal').classList.add('active');
     }
 
     function closeFaltasModal() {
         document.getElementById('faltas-modal').classList.remove('active');
-    }
-
-    function updateFaltasHtmlPreview() {
-        const textVal = document.getElementById('faltas-textarea').value;
-        const escapedText = textVal.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
-        const fullHtml = `<!DOCTYPE html>\n<html lang="pt-BR">\n<head>\n    <meta charset="UTF-8">\n    <title>Parte de Faltas</title>\n</head>\n<body style="font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; color: #1e293b;">\n    <div style="max-width: 800px; margin: 0 auto;">\n        ${escapedText}\n    </div>\n</body>\n</html>`;
-        document.getElementById('faltas-html-preview').innerText = fullHtml;
     }
 
     function copyFaltasText() {
@@ -1070,19 +1058,6 @@
             alert('Texto copiado com sucesso!');
         }).catch(() => {
             fallbackCopyText(textVal);
-        });
-    }
-
-    function copyFaltasHtml() {
-        const htmlVal = document.getElementById('faltas-html-preview').innerText;
-        if (!htmlVal) {
-            alert('Não há HTML para copiar.');
-            return;
-        }
-        navigator.clipboard.writeText(htmlVal).then(() => {
-            alert('HTML completo copiado com sucesso!');
-        }).catch(() => {
-            fallbackCopyText(htmlVal);
         });
     }
 
