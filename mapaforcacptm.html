@@ -20,7 +20,7 @@
         .file-info { display: flex; flex-direction: column; }
         .file-estacao { font-size: 0.75rem; color: #075e54; font-weight: bold; margin-top: 2px; }
         .btn-remove { background: #ff4d4d; color: white; border: none; border-radius: 3px; padding: 4px 8px; cursor: pointer; font-size: 0.75rem; width: auto; }
-        #resultado { margin-top: 15px; background: #e5ddd5; padding: 15px; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 0.85rem; line-height: 1.4; display: none; }
+        #resultado { margin-top: 15px; background: #e5ddd5; padding: 15px; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 0.85rem; line-height: 1.4; display: none; user-select: all; }
         .btn-copiar { background-color: #34b7f1; margin-top: 10px; display: none; }
     </style>
 </head>
@@ -39,7 +39,7 @@
 
     <div class="form-group">
         <label for="faltosos">Novidades - Falta / Exclusão (Nomes ou RE separados por ponto e vírgula):</label>
-        <textarea id="faltosos" placeholder="Ex: Sd Silva; 20966405; Cb Souza"></textarea>
+        <textarea id="faltosos" placeholder="Ex: Sd Silva; 157802-2; Cb Souza"></textarea>
     </div>
 
     <button onclick="processarPDFs()">Gerar Mapa Força</button>
@@ -128,13 +128,20 @@
     function gerarMapaForca(textoPDF, textoFaltas) {
         const listaFaltas = textoFaltas.split(';').map(i => i.trim()).filter(i => i.length > 0);
         
+        let detalhesEncontrados = [];
         let naoEncontrados = [];
         let faltasValidasContagem = 0;
 
         listaFaltas.forEach(itemFalta => {
-            let regexFalta = new RegExp(itemFalta.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-            if (regexFalta.test(textoPDF)) {
+            let escapedTerm = itemFalta.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            let regexFalta = new RegExp(escapedTerm, 'gi');
+            let match = regexFalta.exec(textoPDF);
+
+            if (match) {
                 faltasValidasContagem++;
+                let indiceInicio = match.index;
+                let extracao = textoPDF.substr(indiceInicio, itemFalta.length + 58).replace(/\s+/g, ' ').trim();
+                detalhesEncontrados.push(extracao);
             } else {
                 naoEncontrados.push(itemFalta);
             }
@@ -163,27 +170,16 @@
 
         let temSarg = /\b([1-3]\.\s*SARGENTO|SARGENTO|SUB\s*TENENTE|1\.?\s*SGT|2\.?\s*SGT|3\.?\s*SGT|SUB\s*TEN|ST)\b/gi.test(textoPDF);
         let totalSgtSub = temSarg ? 1 : 0;
-
         if (listaGlobalArquivos.length > 1) {
             totalSgtSub = listaGlobalArquivos.filter(item => /\b([1-3]\.\s*SARGENTO|SARGENTO|SUB\s*TENENTE|1\.?\s*SGT|2\.?\s*SGT|3\.?\s*SGT|SUB\s*TEN|ST)\b/gi.test(item.texto)).length;
         }
 
         let totalCbSd = totalGeralPMs > totalSgtSub ? totalGeralPMs - totalSgtSub : 0;
-        
-        // Corrigindo contagem para subtrair faltas encontradas (apenas as que foram achadas nas escalas)
-        let totalFinalCbSd = totalCbSd - faltasValidasContagem;
-        if(totalFinalCbSd < 0) totalFinalCbSd = 0;
-
+        let totalFinalCbSd = (totalCbSd - faltasValidasContagem) < 0 ? 0 : (totalCbSd - faltasValidasContagem);
         let totalGeralFinal = totalSgtSub + totalFinalCbSd;
 
-        let qtdFaltasFormatada = String(faltasValidasContagem).padStart(2, '0');
-
         const hoje = new Date();
-        const dia = String(hoje.getDate()).padStart(2, '0');
-        const meses = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
-        const mesStr = meses[hoje.getMonth()];
-        const anoStr = String(hoje.getFullYear()).slice(-2);
-        const dataFormatada = `${dia}${mesStr}${anoStr}`;
+        const dataFormatada = `${String(hoje.getDate()).padStart(2, '0')}${["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"][hoje.getMonth()]}${String(hoje.getFullYear()).slice(-2)}`;
 
         let textoFinal = `MAPA FORÇA - DEJEM CPTM - CPA/M-6\n`;
         textoFinal += `DATA: ${dataFormatada}\n`;
@@ -191,13 +187,17 @@
         textoFinal += resultadoEstacoes + `\n`;
         textoFinal += `Sgt/Sub: ${String(totalSgtSub).padStart(2, '0')}\n`;
         textoFinal += `Cb/Sd: ${String(totalFinalCbSd).padStart(2, '0')}\n`;
-        textoFinal += `Faltas: ${qtdFaltasFormatada}\n`;
+        textoFinal += `Faltas: ${String(faltasValidasContagem).padStart(2, '0')}\n`;
         textoFinal += `Total: ${totalGeralFinal}\n`;
         textoFinal += `Mapa Força: 20966405\n`;
         textoFinal += `Resultado: 12746057\n\n`;
 
+        if (detalhesEncontrados.length > 0) {
+            textoFinal += `✅ Novidades detectadas:\n${[...new Set(detalhesEncontrados)].join('\n')}\n\n`;
+        }
+
         if (naoEncontrados.length > 0) {
-            textoFinal += `⚠️ Aviso: O(s) seguinte(s) RE/Nome não foi(ram) encontrado(s) nas escalas e NÃO foram considerados na subtração:\n${naoEncontrados.join('\n')}\n\n`;
+            textoFinal += `⚠️ Aviso: Não encontrado nas escalas:\n${naoEncontrados.join('; ')}\n\n`;
         }
 
         textoFinal += `Por gentileza, não esqueçam de enviar a escala via link disponível no grupo e assinar o livro em suas respectivas estações.\n\n`;
@@ -210,11 +210,37 @@
     }
 
     function copiarTexto() {
-        navigator.clipboard.writeText(document.getElementById('resultado').innerText).then(() => {
-            alert("Mapa Força copiado com sucesso! Agora é só colar no WhatsApp.");
-        }).catch(err => {
-            alert("Erro ao copiar texto.");
-        });
+        const divResultado = document.getElementById('resultado');
+        
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(divResultado.innerText).then(() => {
+                alert("Mapa Força copiado com sucesso!");
+            }).catch(() => {
+                realizarCopiaAlternativa(divResultado);
+            });
+        } else {
+            realizarCopiaAlternativa(divResultado);
+        }
+    }
+
+    function realizarCopiaAlternativa(elemento) {
+        const range = document.createRange();
+        range.selectNodeContents(elemento);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        
+        try {
+            const sucesso = document.execCommand('copy');
+            if (sucesso) {
+                alert("Mapa Força copiado com sucesso!");
+            } else {
+                alert("Não foi possível copiar automaticamente. O texto foi selecionado, basta tocar em 'Copiar'.");
+            }
+        } catch (err) {
+            alert("Erro ao copiar. Selecione o texto manualmente.");
+        }
+        selection.removeAllRanges();
     }
 </script>
 </body>
