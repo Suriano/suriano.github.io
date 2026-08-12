@@ -20,7 +20,7 @@
         .file-info { display: flex; flex-direction: column; }
         .file-estacao { font-size: 0.75rem; color: #075e54; font-weight: bold; margin-top: 2px; }
         .btn-remove { background: #ff4d4d; color: white; border: none; border-radius: 3px; padding: 4px 8px; cursor: pointer; font-size: 0.75rem; width: auto; }
-        #resultado { margin-top: 15px; background: #e5ddd5; padding: 15px; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 0.85rem; line-height: 1.4; display: none; user-select: all; }
+        #resultado { margin-top: 15px; background: #e5ddd5; padding: 15px; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 0.85rem; line-height: 1.4; display: none; width: 100%; box-sizing: border-box; border: 1px solid #ccc; resize: vertical; height: 250px; }
         .btn-copiar { background-color: #34b7f1; margin-top: 10px; display: none; }
     </style>
 </head>
@@ -44,7 +44,7 @@
 
     <button onclick="processarPDFs()">Gerar Mapa Força</button>
 
-    <div id="resultado"></div>
+    <textarea id="resultado" placeholder="O resultado gerado aparecerá aqui e você poderá editá-lo livremente..."></textarea>
     <button id="btnCopiar" class="btn-copiar" onclick="copiarTexto()">Copiar para o WhatsApp</button>
 </div>
 
@@ -189,8 +189,8 @@
         textoFinal += `Cb/Sd: ${String(totalFinalCbSd).padStart(2, '0')}\n`;
         textoFinal += `Faltas: ${String(faltasValidasContagem).padStart(2, '0')}\n`;
         textoFinal += `Total: ${totalGeralFinal}\n`;
-        textoFinal += `Mapa Força: 20966405\n`;
-        textoFinal += `Resultado: 12746057\n\n`;
+        textoFinal += `Mapa Força: \n`;
+        textoFinal += `Resultado: \n\n`;
 
         if (detalhesEncontrados.length > 0) {
             textoFinal += `✅ Novidades detectadas:\n${[...new Set(detalhesEncontrados)].join('\n')}\n\n`;
@@ -203,44 +203,39 @@
         textoFinal += `Por gentileza, não esqueçam de enviar a escala via link disponível no grupo e assinar o livro em suas respectivas estações.\n\n`;
         textoFinal += `Boa tarde e bom serviço a todos.`;
 
-        const divResultado = document.getElementById('resultado');
-        divResultado.style.display = 'block';
-        divResultado.innerText = textoFinal;
+        const textareaResultado = document.getElementById('resultado');
+        textareaResultado.style.display = 'block';
+        textareaResultado.value = textoFinal;
         document.getElementById('btnCopiar').style.display = 'block';
     }
 
     function copiarTexto() {
-        const divResultado = document.getElementById('resultado');
+        const textareaResultado = document.getElementById('resultado');
+        textareaResultado.select();
+        textareaResultado.setSelectionRange(0, textareaResultado.value.length);
         
         if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(divResultado.innerText).then(() => {
+            navigator.clipboard.writeText(textareaResultado.value).then(() => {
                 alert("Mapa Força copiado com sucesso!");
             }).catch(() => {
-                realizarCopiaAlternativa(divResultado);
+                realizarCopiaAlternativa(textareaResultado);
             });
         } else {
-            realizarCopiaAlternativa(divResultado);
+            realizarCopiaAlternativa(textareaResultado);
         }
     }
 
     function realizarCopiaAlternativa(elemento) {
-        const range = document.createRange();
-        range.selectNodeContents(elemento);
-        const selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-        
         try {
             const sucesso = document.execCommand('copy');
             if (sucesso) {
                 alert("Mapa Força copiado com sucesso!");
             } else {
-                alert("Não foi possível copiar automaticamente. O texto foi selecionado, basta tocar em 'Copiar'.");
+                alert("Texto selecionado. Toque em 'Copiar' se necessário.");
             }
         } catch (err) {
-            alert("Erro ao copiar. Selecione o texto manualmente.");
+            alert("Erro ao copiar. O texto está selecionado para cópia manual.");
         }
-        selection.removeAllRanges();
     }
 </script>
 </body>
