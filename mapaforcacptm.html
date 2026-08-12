@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Mapa Força - CPTM</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 15px; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #075e54; font-size: 1.2rem; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; }
+        input[type="file"], textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 0.9rem; }
+        textarea { resize: vertical; height: 70px; }
+        button { background-color: #25d366; color: white; border: none; padding: 12px; width: 100%; font-size: 1rem; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 5px; }
+        button:hover { background-color: #128c7e; }
+        .file-list { background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; padding: 8px; margin-top: 8px; max-height: 150px; overflow-y: auto; font-size: 0.85rem; }
+        .file-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #eee; }
+        .file-info { display: flex; flex-direction: column; }
+        .file-estacao { font-size: 0.75rem; color: #075e54; font-weight: bold; margin-top: 2px; }
+        .btn-remove { background: #ff4d4d; color: white; border: none; border-radius: 3px; padding: 4px 8px; cursor: pointer; font-size: 0.75rem; width: auto; }
+        #resultado { margin-top: 15px; background: #e5ddd5; padding: 15px; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 0.85rem; line-height: 1.4; display: none; }
+        .btn-copiar { background-color: #34b7f1; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>MAPA FORÇA - DEJEM CPTM</h2>
+    
+    <div class="form-group">
+        <label for="pdfFiles">Adicionar Escalas (PDF):</label>
+        <input type="file" id="pdfFiles" accept="application/pdf" multiple onchange="adicionarArquivos(this)">
+        <div id="listaArquivosContainer" class="file-list" style="display: none;">
+            <div id="arquivosAdicionados"></div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="faltosos">Faltas (Nomes ou RGs separados por vírgula):</label>
+        <textarea id="faltosos" placeholder="Ex: Sd Silva, 20966405, Cb Souza"></textarea>
+    </div>
+
+    <button onclick="processarPDFs()">Gerar Mapa Força</button>
+
+    <div id="resultado"></div>
+    <button id="btnCopiar" class="btn-copiar" onclick="copiarTexto()">Copiar para o WhatsApp</button>
+</div>
+
+<script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+    let listaGlobalArquivos = [];
+
+    const estacoesCPTM = [
+        "São Caetano do Sul", "Utinga", "Prefeito Saladino", "Santo André", 
+        "Capuava", "Mauá", "Guapituba", "Ribeirão Pires", "Rio Grande da Serra"
+    ];
+
+    async function adicionarArquivos(input) {
+        if (input.files.length > 0) {
+            for (let i = 0; i < input.files.length; i++) {
+                let arquivoObj = { file: input.files[i], texto: "", estacao: "Lendo..." };
+                listaGlobalArquivos.push(arquivoObj);
+                extrairTextoEIdentificarEstacao(arquivoObj);
+            }
+            input.value = "";
+        }
+    }
+
+    async function extrairTextoEIdentificarEstacao(arquivoObj) {
+        try {
+            const texto = await lerArquivoPDF(arquivoObj.file);
+            arquivoObj.texto = texto;
+            let encontrada = "Estação não identificada";
+            for (let estacao of estacoesCPTM) {
+                if (new RegExp(estacao, 'gi').test(texto)) {
+                    encontrada = `Estação: ${estacao}`;
+                    break;
+                }
+            }
+            arquivoObj.estacao = encontrada;
+        } catch (e) { arquivoObj.estacao = "Erro na leitura"; }
+        atualizarListaVisual();
+    }
+
+    function atualizarListaVisual() {
+        const container = document.getElementById('listaArquivosContainer');
+        const listaDiv = document.getElementById('arquivosAdicionados');
+        listaDiv.innerHTML = "";
+        if (listaGlobalArquivos.length > 0) {
+            container.style.display = 'block';
+            listaGlobalArquivos.forEach((item, index) => {
+                listaDiv.innerHTML += `
+                    <div class="file-item">
+                        <div class="file-info"><span>📄 ${item.file.name}</span><span class="file-estacao">📍 ${item.estacao}</span></div>
+                        <button class="btn-remove" onclick="removerArquivo(${index})">Remover</button>
+                    </div>`;
+            });
+        } else { container.style.display = 'none'; }
+    }
+
+    function removerArquivo(index) { listaGlobalArquivos.splice(index, 1); atualizarListaVisual(); }
+
+    function lerArquivoPDF(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = async function() {
+                const pdf = await pdfjsLib.getDocument(new Uint8Array(this.result)).promise;
+                let texto = "";
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const content = await (await pdf.getPage(i)).getTextContent();
+                    texto += content.items.map(item => item.str).join(" ") + "\n";
+                }
+                resolve(texto);
+            };
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    async function processarPDFs() {
+        if (listaGlobalArquivos.length === 0) return alert("Selecione um PDF.");
+        let textoTotal = listaGlobalArquivos.map(i => i.texto).join("\n");
+        gerarMapaForca(textoTotal, document.getElementById('faltosos').value);
+    }
+
+    function gerarMapaForca(textoPDF, textoFaltas) {
+        const listaFaltas = textoFaltas.split(/[\n,]/).map(i => i.trim()).filter(i => i.length > 0);
+        let resultadoEstacoes = "";
+        let totalGeralPMs = 0;
+
+        estacoesCPTM.forEach(estacao => {
+            let tem = new RegExp(estacao, 'gi').test(textoPDF);
+            let qtdPMsEstacao = 0;
+            
+            if (tem) {
+                let ocorrenciasEstacao = listaGlobalArquivos.filter(item => new RegExp(estacao, 'gi').test(item.texto)).length;
+                qtdPMsEstacao = estacao.includes("Ribeirão Pires") ? (ocorrenciasEstacao * 1) : (ocorrenciasEstacao * 2);
+            }
+
+            totalGeralPMs += qtdPMsEstacao;
+            
+            if (estacao.includes("Ribeirão Pires")) {
+                resultadoEstacoes += `🚄 ${estacao}: ${String(qtdPMsEstacao).padStart(2, '0')} PM\n`;
+            } else {
+                resultadoEstacoes += `🚄 ${estacao}: ${String(qtdPMsEstacao).padStart(2, '0')} PMs\n`;
+            }
+        });
+
+        // Contagem exata e restrita para evitar duplicidade de termos no cabeçalho/rodapé do PDF
+        let temSarg = /\b([1-3]\.\s*SARGENTO|SARGENTO|SUB\s*TENENTE|1\.?\s*SGT|2\.?\s*SGT|3\.?\s*SGT|SUB\s*TEN|ST)\b/gi.test(textoPDF);
+        let totalSgtSub = temSarg ? 1 : 0;
+
+        // Se houver mais de um arquivo, varre individualmente para somar os sargentos reais de cada escala
+        if (listaGlobalArquivos.length > 1) {
+            totalSgtSub = listaGlobalArquivos.filter(item => /\b([1-3]\.\s*SARGENTO|SARGENTO|SUB\s*TENENTE|1\.?\s*SGT|2\.?\s*SGT|3\.?\s*SGT|SUB\s*TEN|ST)\b/gi.test(item.texto)).length;
+        }
+
+        let totalCbSd = totalGeralPMs > totalSgtSub ? totalGeralPMs - totalSgtSub : 0;
+        
+        if ((totalSgtSub + totalCbSd) !== totalGeralPMs && (totalSgtSub + totalCbSd) > 0) {
+            totalGeralPMs = totalSgtSub + totalCbSd;
+        }
+
+        let qtdFaltasFormatada = String(listaFaltas.length).padStart(2, '0');
+
+        const hoje = new Date();
+        const dia = String(hoje.getDate()).padStart(2, '0');
+        const meses = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+        const mesStr = meses[hoje.getMonth()];
+        const anoStr = String(hoje.getFullYear()).slice(-2);
+        const dataFormatada = `${dia}${mesStr}${anoStr}`;
+
+        let textoFinal = `MAPA FORÇA - DEJEM CPTM - CPA/M-6\n`;
+        textoFinal += `DATA: ${dataFormatada}\n`;
+        textoFinal += `HORÁRIO: das 15h às 23h\n\n`;
+        textoFinal += resultadoEstacoes + `\n`;
+        textoFinal += `Sgt/Sub: ${String(totalSgtSub).padStart(2, '0')}\n`;
+        textoFinal += `Cb/Sd: ${String(totalCbSd).padStart(2, '0')}\n`;
+        textoFinal += `Faltas: ${qtdFaltasFormatada}\n`;
+        textoFinal += `Total: ${totalGeralPMs}\n`;
+        textoFinal += `Mapa Força: 20966405\n`;
+        textoFinal += `Resultado: 12746057\n\n`;
+        textoFinal += `Por gentileza, não esqueçam de enviar a escala via link disponível no grupo e assinar o livro em suas respectivas estações.\n\n`;
+        textoFinal += `Boa tarde e bom serviço a todos.`;
+
+        const divResultado = document.getElementById('resultado');
+        divResultado.style.display = 'block';
+        divResultado.innerText = textoFinal;
+        document.getElementById('btnCopiar').style.display = 'block';
+    }
+
+    function copiarTexto() {
+        navigator.clipboard.writeText(document.getElementById('resultado').innerText).then(() => {
+            alert("Mapa Força copiado com sucesso! Agora é só colar no WhatsApp.");
+        }).catch(err => {
+            alert("Erro ao copiar texto.");
+        });
+    }
+</script>
+</body>
+</html>
