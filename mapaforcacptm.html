@@ -218,6 +218,15 @@
         const hoje = new Date();
         const dataFormatada = `${String(hoje.getDate()).padStart(2, '0')}${["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"][hoje.getMonth()]} ${String(hoje.getFullYear()).slice(-2)}`;
 
+        // Determinar saudação com base no horário atual
+        const horaAtual = hoje.getHours();
+        let saudacao = "Bom dia";
+        if (horaAtual >= 12 && horaAtual < 18) {
+            saudacao = "Boa tarde";
+        } else if (horaAtual >= 18) {
+            saudacao = "Boa noite";
+        }
+
         let textoFinal = `MAPA FORÇA - DEJEM CPTM - CPA/M-6\n`;
         textoFinal += `DATA: ${dataFormatada}\n`;
         textoFinal += `HORÁRIO: das 15h às 23h\n\n`;
@@ -238,7 +247,7 @@
         }
 
         textoFinal += `Por gentileza, não esqueçam de enviar a escala via link disponível no grupo e assinar o livro em suas respectivas estações.\n\n`;
-        textoFinal += `Boa tarde e bom serviço a todos.`;
+        textoFinal += `${saudacao} e bom serviço a todos.`;
 
         const textareaResultado = document.getElementById('resultado');
         textareaResultado.style.display = 'block';
