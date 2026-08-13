@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Mapa Força - CPTM</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 15px; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #075e54; font-size: 1.2rem; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; }
+        input[type="file"], textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 0.9rem; }
+        textarea { resize: vertical; height: 70px; }
+        button { background-color: #25d366; color: white; border: none; padding: 12px; width: 100%; font-size: 1rem; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 5px; display: flex; align-items: center; justify-content: center; }
+        button:hover { background-color: #128c7e; }
+        .file-list { background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; padding: 8px; margin-top: 8px; max-height: 150px; overflow-y: auto; font-size: 0.85rem; }
+        .file-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #eee; }
+        .file-info { display: flex; flex-direction: column; }
+        .file-estacao { font-size: 0.75rem; color: #075e54; font-weight: bold; margin-top: 2px; }
+        .btn-remove { background: #ff4d4d; color: white; border: none; border-radius: 3px; padding: 4px 8px; cursor: pointer; font-size: 0.75rem; width: auto; }
+        #resultado { margin-top: 15px; background: #e5ddd5; padding: 15px; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 0.85rem; line-height: 1.4; display: none; width: 100%; box-sizing: border-box; border: 1px solid #ccc; resize: vertical; height: 250px; }
+        .btn-copiar { background-color: #34b7f1; margin-top: 10px; display: none; }
+        .btn-whatsapp { background-color: #25d366; margin-top: 5px; display: none; }
+        .btn-limpar { background-color: #ff4d4d; margin-top: 20px; display: block; }
+        .btn-limpar:hover { background-color: #cc0000; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>MAPA FORÇA - DEJEM CPTM</h2>
+    
+    <div class="form-group">
+        <label for="pdfFiles">Adicionar Escalas (PDF):</label>
+        <input type="file" id="pdfFiles" accept="application/pdf" multiple onchange="adicionarArquivos(this)">
+        <div id="listaArquivosContainer" class="file-list" style="display: none;">
+            <div id="arquivosAdicionados"></div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="faltosos">Novidades - Falta / Exclusão (Nomes ou RE separados por ponto e vírgula):</label>
+        <textarea id="faltosos" placeholder="Ex: Sd Silva; 157802-2; Cb Souza"></textarea>
+    </div>
+
+    <button onclick="processarPDFs()">Gerar Mapa Força</button>
+
+    <textarea id="resultado" placeholder="O resultado gerado aparecerá aqui e você poderá editá-lo livremente..."></textarea>
+    <button id="btnCopiar" class="btn-copiar" onclick="copiarTexto()">Copiar para o WhatsApp</button>
+    <button id="btnWhatsapp" class="btn-whatsapp" onclick="abrirWhatsApp()">
+        <svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle; margin-right: 8px;" fill="white">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.955c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.005 0C5.37 0 .002 5.368.002 12.006c0 2.092.548 4.135 1.593 5.922L.002 24l6.332-1.654a11.802 11.802 0 0 0 5.673 1.443h.005c6.635 0 12.003-5.368 12.003-12.005 0-3.21-1.249-6.233-3.518-8.503"/>
+        </svg>
+        Abrir no WhatsApp
+    </button>
+    <button id="btnLimpar" class="btn-limpar" onclick="limparTudo()">
+        <svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle; margin-right: 8px;" fill="white">
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+        </svg>
+        Limpar Tudo
+    </button>
+</div>
+
+<script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+    window.onload = function() {
+        if (localStorage.getItem('faltosos')) {
+            document.getElementById('faltosos').value = localStorage.getItem('faltosos');
+        }
+        if (localStorage.getItem('resultado')) {
+            const textareaResultado = document.getElementById('resultado');
+            textareaResultado.value = localStorage.getItem('resultado');
+            textareaResultado.style.display = 'block';
+            document.getElementById('btnCopiar').style.display = 'flex';
+            document.getElementById('btnWhatsapp').style.display = 'flex';
+        }
+    };
+
+    document.getElementById('faltosos').addEventListener('input', function() {
+        localStorage.setItem('faltosos', this.value);
+    });
+
+    function limparTudo() {
+        if (confirm("Deseja realmente limpar todos os dados salvos?")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    function salvarResultado(texto) {
+        localStorage.setItem('resultado', texto);
+    }
+
+    let listaGlobalArquivos = [];
+    const estacoesCPTM = [
+        "São Caetano do Sul", "Utinga", "Prefeito Saladino", "Santo André", 
+        "Capuava", "Mauá", "Guapituba", "Ribeirão Pires", "Rio Grande da Serra"
+    ];
+
+    async function adicionarArquivos(input) {
+        if (input.files.length > 0) {
+            for (let i = 0; i < input.files.length; i++) {
+                let arquivoObj = { file: input.files[i], texto: "", estacao: "Lendo..." };
+                listaGlobalArquivos.push(arquivoObj);
+                extrairTextoEIdentificarEstacao(arquivoObj);
+            }
+            input.value = "";
+        }
+    }
+
+    async function extrairTextoEIdentificarEstacao(arquivoObj) {
+        try {
+            const texto = await lerArquivoPDF(arquivoObj.file);
+            arquivoObj.texto = texto;
+            let encontrada = "Estação não identificada";
+            for (let estacao of estacoesCPTM) {
+                if (new RegExp(estacao, 'gi').test(texto)) {
+                    encontrada = `Estação: ${estacao}`;
+                    break;
+                }
+            }
+            arquivoObj.estacao = encontrada;
+        } catch (e) { arquivoObj.estacao = "Erro na leitura"; }
+        atualizarListaVisual();
+    }
+
+    function atualizarListaVisual() {
+        const container = document.getElementById('listaArquivosContainer');
+        const listaDiv = document.getElementById('arquivosAdicionados');
+        listaDiv.innerHTML = "";
+        if (listaGlobalArquivos.length > 0) {
+            container.style.display = 'block';
+            listaGlobalArquivos.forEach((item, index) => {
+                listaDiv.innerHTML += `
+                    <div class="file-item">
+                        <div class="file-info"><span>📄 ${item.file.name}</span><span class="file-estacao">📍 ${item.estacao}</span></div>
+                        <button class="btn-remove" onclick="removerArquivo(${index})">Remover</button>
+                    </div>`;
+            });
+        } else { container.style.display = 'none'; }
+    }
+
+    function removerArquivo(index) { listaGlobalArquivos.splice(index, 1); atualizarListaVisual(); }
+
+    function lerArquivoPDF(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = async function() {
+                const pdf = await pdfjsLib.getDocument(new Uint8Array(this.result)).promise;
+                let texto = "";
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const content = await (await pdf.getPage(i)).getTextContent();
+                    texto += content.items.map(item => item.str).join(" ") + "\n";
+                }
+                resolve(texto);
+            };
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    async function processarPDFs() {
+        if (listaGlobalArquivos.length === 0) return alert("Selecione um PDF.");
+        let textoTotal = listaGlobalArquivos.map(i => i.texto).join("\n");
+        gerarMapaForca(textoTotal, document.getElementById('faltosos').value);
+    }
+
+    function gerarMapaForca(textoPDF, textoFaltas) {
+        const listaFaltas = textoFaltas.split(';').map(i => i.trim()).filter(i => i.length > 0);
+        let detalhesEncontrados = [];
+        let naoEncontrados = [];
+        let faltasValidasContagem = 0;
+
+        listaFaltas.forEach(itemFalta => {
+            let escapedTerm = itemFalta.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            let regexFalta = new RegExp(escapedTerm, 'gi');
+            let match = regexFalta.exec(textoPDF);
+            
+            if (match) {
+                faltasValidasContagem++;
+                let indiceInicio = match.index;
+                
+                // Janela anterior para capturar posto/graduação
+                let inicioJanela = Math.max(0, indiceInicio - 60);
+                let trechoAnterior = textoPDF.substring(inicioJanela, indiceInicio);
+                
+                // Regex para capturar posto/graduação (com número para sargentos)
+                let regexPosto = /\b(([1-3])[º°.]?\s*(SARGENTO|SGT)|CORONEL|TENENTE[- ]CORONEL|MAJOR|CAPITAO|CAP|1[ºo]?[- ]TENENTE|2[ºo]?[- ]TENENTE|ASPIRANTE|SUB[- ]TENENTE|SUBTENENTE|ST|CABO|CB|SOLDADO|SD)\b/gi;
+                
+                let correspondenciasPosto = [...trechoAnterior.matchAll(regexPosto)];
+                let postoEncontrado = "";
+                
+                if (correspondenciasPosto.length > 0) {
+                    let ultimoMatch = correspondenciasPosto[correspondenciasPosto.length - 1];
+                    let textoPosto = ultimoMatch[0];
+                    let numeroSgt = ultimoMatch[2];
+                    
+                    if (/SARGENTO|SGT/i.test(textoPosto) && numeroSgt) {
+                        postoEncontrado = `${numeroSgt}º Sgt`;
+                    } else if (/SARGENTO|SGT/i.test(textoPosto)) {
+                        postoEncontrado = "Sgt";
+                    } else {
+                        postoEncontrado = textoPosto;
+                    }
+                }
+                
+                // Janela posterior ampla para capturar o nome, RE, unidade e cortar ao encontrar a hora (ex: padrão de horário HH:MM ou HHh)
+                let fimJanela = indiceInicio + itemFalta.length + 120;
+                let trechoPosterior = textoPDF.substring(indiceInicio, fimJanela).replace(/\s+/g, ' ');
+                
+                // Regex para capturar a unidade/OPM
+                let regexUnidade = /\b(\d+[º°]?\s*BPM\/[I|M]?[\-\d]*|CPA\/M[\-\d]*|\d+[ªªªa]?\s*CIA[\/\d]*|BATALHAO)\b/gi;
+                let matchUnidade = trechoPosterior.match(regexUnidade);
+                let unidadeEncontrada = matchUnidade ? matchUnidade[0] : "";
+                
+                let linhaTemp = postoEncontrado ? `${postoEncontrado} ${trechoPosterior}` : trechoPosterior;
+                if (unidadeEncontrada && !linhaTemp.includes(unidadeEncontrada)) {
+                    // Insere a unidade logo após o RE/nome (antes da hora)
+                    linhaTemp = linhaTemp.replace(itemFalta, `${itemFalta} - ${unidadeEncontrada}`);
+                }
+                
+                // Parar ao encontrar qualquer padrão de hora (ex: 15:00, 23h, 15h00)
+                let regexHora = /\b([0-2]?[0-9][:hH][0-5][0-9]|[0-2]?[0-9]h)\b/;
+                let matchHora = linhaTemp.match(regexHora);
+                
+                let linhaFinal = linhaTemp;
+                if (matchHora) {
+                    let indiceHora = linhaTemp.indexOf(matchHora[0]);
+                    linhaFinal = linhaTemp.substring(0, indiceHora).trim();
+                }
+                
+                detalhesEncontrados.push(linhaFinal.trim());
+            } else {
+                naoEncontrados.push(itemFalta);
+            }
+        });
+
+        let resultadoEstacoes = "";
+        let totalGeralPMs = 0;
+
+        estacoesCPTM.forEach(estacao => {
+            let tem = new RegExp(estacao, 'gi').test(textoPDF);
+            let qtdPMsEstacao = 0;
+            if (tem) {
+                let ocorrenciasEstacao = listaGlobalArquivos.filter(item => new RegExp(estacao, 'gi').test(item.texto)).length;
+                qtdPMsEstacao = estacao.includes("Ribeirão Pires") ? (ocorrenciasEstacao * 1) : (ocorrenciasEstacao * 2);
+            }
+            totalGeralPMs += qtdPMsEstacao;
+            if (estacao.includes("Ribeirão Pires")) {
+                resultadoEstacoes += `🚄 ${estacao}: ${String(qtdPMsEstacao).padStart(2, '0')} PM\n`;
+            } else {
+                resultadoEstacoes += `🚄 ${estacao}: ${String(qtdPMsEstacao).padStart(2, '0')} PMs\n`;
+            }
+        });
+
+        let temSarg = /\b([1-3]\.\s*SARGENTO|SARGENTO|SUB\s*TENENTE|1\.?\s*SGT|2\.?\s*SGT|3\.?\s*SGT|SUB\s*TEN|ST)\b/gi.test(textoPDF);
+        let totalSgtSub = temSarg ? 1 : 0;
+        if (listaGlobalArquivos.length > 1) {
+            totalSgtSub = listaGlobalArquivos.filter(item => /\b([1-3]\.\s*SARGENTO|SARGENTO|SUB\s*TENENTE|1\.?\s*SGT|2\.?\s*SGT|3\.?\s*SGT|SUB\s*TEN|ST)\b/gi.test(item.texto)).length;
+        }
+
+        let totalCbSd = totalGeralPMs > totalSgtSub ? totalGeralPMs - totalSgtSub : 0;
+        let totalFinalCbSd = (totalCbSd - faltasValidasContagem) < 0 ? 0 : (totalCbSd - faltasValidasContagem);
+        let totalGeralFinal = totalSgtSub + totalFinalCbSd;
+
+        const hoje = new Date();
+        const dataFormatada = `${String(hoje.getDate()).padStart(2, '0')}${["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"][hoje.getMonth()]} ${String(hoje.getFullYear()).slice(-2)}`;
+
+        const horaAtual = hoje.getHours();
+        let saudacao = "Bom dia";
+        if (horaAtual >= 12 && horaAtual < 18) {
+            saudacao = "Boa tarde";
+        } else if (horaAtual >= 18) {
+            saudacao = "Boa noite";
+        }
+
+        let textoFinal = `MAPA FORÇA - DEJEM CPTM - CPA/M-6\n`;
+        textoFinal += `DATA: ${dataFormatada}\n`;
+        textoFinal += `HORÁRIO: das 15h às 23h\n\n`;
+        textoFinal += resultadoEstacoes + `\n`;
+        textoFinal += `Sgt/Sub: ${String(totalSgtSub).padStart(2, '0')}\n`;
+        textoFinal += `Cb/Sd: ${String(totalFinalCbSd).padStart(2, '0')}\n`;
+        textoFinal += `Faltas: ${String(faltasValidasContagem).padStart(2, '0')}\n`;
+        textoFinal += `Total: ${totalGeralFinal}\n`;
+        textoFinal += `Mapa Força: \n`;
+        textoFinal += `Resultado: \n\n`;
+
+        if (detalhesEncontrados.length > 0) {
+            textoFinal += `✅ Novidades detectadas:\n${[...new Set(detalhesEncontrados)].join('\n')}\n\n`;
+        }
+
+        if (naoEncontrados.length > 0) {
+            textoFinal += `⚠️ Aviso: Não encontrado nas escalas:\n${naoEncontrados.join('; ')}\n\n`;
+        }
+
+        textoFinal += `Por gentileza, não esqueçam de enviar a escala via link disponível no grupo e assinar o livro em suas respectivas estações.\n\n`;
+        textoFinal += `${saudacao} e bom serviço a todos.`;
+
+        const textareaResultado = document.getElementById('resultado');
+        textareaResultado.style.display = 'block';
+        textareaResultado.value = textoFinal;
+        
+        salvarResultado(textoFinal);
+
+        document.getElementById('btnCopiar').style.display = 'flex';
+        document.getElementById('btnWhatsapp').style.display = 'flex';
+    }
+
+    function copiarTexto() {
+        const textareaResultado = document.getElementById('resultado');
+        textareaResultado.select();
+        textareaResultado.setSelectionRange(0, textareaResultado.value.length);
+        
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(textareaResultado.value).then(() => {
+                alert("Mapa Força copiado com sucesso!");
+            }).catch(() => {
+                realizarCopiaAlternativa(textareaResultado);
+            });
+        } else {
+            realizarCopiaAlternativa(textareaResultado);
+        }
+    }
+
+    function abrirWhatsApp() {
+        const textareaResultado = document.getElementById('resultado');
+        const textoCodificado = encodeURIComponent(textareaResultado.value);
+        window.open(`https://wa.me/?text=${textoCodificado}`, '_blank');
+    }
+
+    function realizarCopiaAlternativa(elemento) {
+        try {
+            const sucesso = document.execCommand('copy');
+            if (sucesso) {
+                alert("Mapa Força copiado com sucesso!");
+            } else {
+                alert("Texto selecionado. Toque em 'Copiar' se necessário.");
+            }
+        } catch (err) {
+            alert("Erro ao copiar. O texto está selecionado para cópia manual.");
+        }
+    }
+</script>
+</body>
+</html>
