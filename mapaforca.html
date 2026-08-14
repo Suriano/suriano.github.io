@@ -1567,7 +1567,6 @@
             if (matchPolice) {
                 let reExact = matchPolice[1].replace(/\s+/g, '-');
                 
-                // Tratamento específico para corrigir casos onde o RE vem grudado no posto/graduação sem hífen adequado (ex: 151581-A)
                 if (/^\d{6}[-\s]?[A-Z0-9]$/.test(reExact) && !reExact.includes('-')) {
                     reExact = reExact.slice(0, -1) + '-' + reExact.slice(-1);
                 } else if (/^\d{7,8}$/.test(reExact)) {
@@ -1578,10 +1577,13 @@
                     return;
                 }
 
-                let cleanText = line.replace(/\b\d{2}:\d{2}\b/g, '')
-                                    .replace(/\b(COPOM|DIV OP|BPM\/M|CIA PM)\b[\w\.\/]*/gi, '')
-                                    .replace(/\s+/g, ' ')
-                                    .trim();
+                let lineBeforeTime = line;
+                const timeMatchIndex = line.search(/\b\d{2}:\d{2}\b/);
+                if (timeMatchIndex !== -1) {
+                    lineBeforeTime = line.substring(0, timeMatchIndex);
+                }
+
+                let cleanText = lineBeforeTime.replace(/\s+/g, ' ').trim();
 
                 let rankLine = "";
                 let nameStr = "";
@@ -1589,14 +1591,16 @@
                 const matchRank = cleanText.match(/(^.*?\b(?:CEL|CORONEL|TEN\s+CEL|MAJOR|MAJ|CAPITAO|CAP|1º?\s+TEN|2º?\s+TEN|TENENTE|ASP|SUBTENENTE|SUBTEN|SARGENTO|1º?\s+SGT|2º?\s+SGT|3º?\s+SGT|SGT|CABO|CB|SOLDADO|SD|PM)\b)/i);
 
                 if (matchRank) {
-                    rankLine = `${matchRank[1]} ${reExact}`.trim();
+                    let rawRankPart = matchRank[1].trim();
+                    rawRankPart = rawRankPart.replace(/^\d+[\.\)]?\s*/, '').trim();
+                    rankLine = `${rawRankPart} ${reExact}`.trim();
                     nameStr = cleanText.substring(matchRank[0].length).replace(reExact, '').trim();
                 } else {
                     rankLine = `PM ${reExact}`;
                     nameStr = cleanText.replace(reExact, '').trim();
                 }
 
-                nameStr = nameStr.replace(/^\d+[\.\)]?\s*/, '').replace(/\s+\d+[\.\)]?\s*$/, '').trim();
+                nameStr = nameStr.replace(/^\d+[\.\)]?\s*/, '').trim();
 
                 policeDatabase.push({
                     id: `pm-${autoIdCounter++}`,
