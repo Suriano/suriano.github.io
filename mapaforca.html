@@ -1025,7 +1025,8 @@
     let rawTextHTML = '';
     let currentEscalaID = 'Não especificado';
     let currentEscalaAisp = 'Não especificado';
-    let stationsList = Array.from({length: 10}, (_, i) => `cpp${i + 1}`);
+    // Inserido o CPP 'comandante' antes do cpp1
+    let stationsList = ['comandante', ...Array.from({length: 10}, (_, i) => `cpp${i + 1}`)];
 
     const STORAGE_POLICE = 'pmesp_police_db';
     const STORAGE_QTH = 'pmesp_qth_data';
@@ -1187,7 +1188,7 @@
             return;
         }
 
-        const startCppNumber = prompt(`Existem ${addresses.length} endereço(s). A partir de qual CPP deseja começar a inserir?`, '1');
+        const startCppNumber = prompt(`Existem ${addresses.length} endereço(s). A partir de qual CPP deseja começar a inserir? (Digite 1 para CPP 1)`, '1');
         if (!startCppNumber) return;
 
         let startNum = parseInt(startCppNumber.trim(), 10);
@@ -1234,7 +1235,7 @@
             try {
                 stationsList = JSON.parse(saved);
             } catch (e) {
-                stationsList = Array.from({length: 10}, (_, i) => `cpp${i + 1}`);
+                stationsList = ['comandante', ...Array.from({length: 10}, (_, i) => `cpp${i + 1}`)];
             }
         }
     }
@@ -1253,14 +1254,25 @@
         });
 
         stationsList.forEach((stId) => {
-            const num = stId.replace('cpp', '');
+            let labelName = '';
+            let canRemove = false;
+            
+            if (stId === 'comandante') {
+                labelName = 'CPP Comandante';
+                canRemove = false;
+            } else {
+                const num = stId.replace('cpp', '');
+                labelName = `CPP ${num}`;
+                canRemove = parseInt(num) > 10;
+            }
+
             const cppHTML = `
                 <div class="station-column" id="col-${stId}">
                     <div class="station-header">
-                        <span> CPP ${num}</span>
+                        <span> ${labelName}</span>
                         <div style="display:flex; align-items:center; gap:6px;">
                             <span class="badge-count" id="count-${stId}">0</span>
-                            ${parseInt(num) > 10 ? `<button class="btn-remove-cpp" onclick="removeCPP('${stId}')" title="Remover CPP">✖</button>` : ''}
+                            ${canRemove ? `<button class="btn-remove-cpp" onclick="removeCPP('${stId}')" title="Remover CPP">✖</button>` : ''}
                         </div>
                     </div>
                     <div class="qth-container">
@@ -1278,8 +1290,10 @@
     function addNewCPP() {
         let maxNum = 0;
         stationsList.forEach(st => {
-            const n = parseInt(st.replace('cpp', ''), 10);
-            if (!isNaN(n) && n > maxNum) maxNum = n;
+            if (st.startsWith('cpp')) {
+                const n = parseInt(st.replace('cpp', ''), 10);
+                if (!isNaN(n) && n > maxNum) maxNum = n;
+            }
         });
 
         const newId = `cpp${maxNum + 1}`;
@@ -1312,6 +1326,8 @@
     }
 
     function removeCPP(stId) {
+        if (stId === 'comandante') return;
+        
         if (!confirm(`Deseja realmente remover o CPP ${stId.replace('cpp', '')}? O efetivo alocado nele retornará para "Não Alocado".`)) {
             return;
         }
@@ -1594,7 +1610,6 @@
                     let rawRankPart = matchRank[1].trim();
                     rawRankPart = rawRankPart.replace(/^\d+[\.\)]?\s*/, '').trim();
                     
-                    // Garante que "PM" fique estritamente entre a graduação limpa e o RE
                     let cleanRankOnly = rawRankPart.replace(/\bPM\b/gi, '').trim();
                     rankLine = `${cleanRankOnly} PM ${reExact}`.trim();
                     
@@ -1604,7 +1619,6 @@
                     nameStr = cleanText.replace(reExact, '').trim();
                 }
 
-                // Remove eventual prefixo "PM " redundante que venha logo no inicio do nome extraído
                 nameStr = nameStr.replace(/^\bPM\b/i, '').trim();
                 nameStr = nameStr.replace(/^\d+[\.\)]?\s*/, '').trim();
 
@@ -1716,7 +1730,7 @@
 
                 let optionsHTML = `<option value="unassigned" ${p.estacao === 'unassigned' ? 'selected' : ''}> Não Alocado</option>`;
                 stationsList.forEach(stId => {
-                    const num = stId.replace('cpp', '');
+                    let labelName = stId === 'comandante' ? 'CPP Comandante' : `CPP ${stId.replace('cpp', '')}`;
                     const qthStorage = localStorage.getItem(STORAGE_QTH);
                     let qthVal = '';
                     if (qthStorage) {
@@ -1726,7 +1740,7 @@
                         } catch(e){}
                     }
                     const qthDisplay = qthVal ? ` - ${qthVal}` : '';
-                    optionsHTML += `<option value="${stId}" ${p.estacao === stId ? 'selected' : ''}>CPP ${num}${qthDisplay}</option>`;
+                    optionsHTML += `<option value="${stId}" ${p.estacao === stId ? 'selected' : ''}>${labelName}${qthDisplay}</option>`;
                 });
 
                 card.innerHTML = `
@@ -1954,10 +1968,10 @@
         stationsList.forEach(stId => {
             const policiaisNoCpp = policeDatabase.filter(p => p.estacao === stId);
             if (policiaisNoCpp.length > 0) {
-                const num = stId.replace('cpp', '');
+                let labelName = stId === 'comandante' ? 'CPP Comandante' : `CPP ${stId.replace('cpp', '')}`;
                 const qthVal = qthObj[stId] ? qthObj[stId].trim() : '';
                 cppComPoliciais.push({
-                    num: num,
+                    name: labelName,
                     qth: qthVal,
                     policiais: policiaisNoCpp
                 });
@@ -1967,7 +1981,7 @@
         if (cppComPoliciais.length > 0) {
             msg += `\n*DISTRIBUIÇÃO DE CPPs COM POLICIAIS:*\n`;
             cppComPoliciais.forEach(cpp => {
-                msg += `\n*CPP ${cpp.num}*`;
+                msg += `\n*${cpp.name}*`;
                 if (cpp.qth) {
                     msg += ` - QTH: ${cpp.qth}`;
                 }
