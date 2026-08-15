@@ -1593,13 +1593,19 @@
                 if (matchRank) {
                     let rawRankPart = matchRank[1].trim();
                     rawRankPart = rawRankPart.replace(/^\d+[\.\)]?\s*/, '').trim();
-                    rankLine = `${rawRankPart} ${reExact}`.trim();
+                    
+                    // Garante que "PM" fique estritamente entre a graduação limpa e o RE
+                    let cleanRankOnly = rawRankPart.replace(/\bPM\b/gi, '').trim();
+                    rankLine = `${cleanRankOnly} PM ${reExact}`.trim();
+                    
                     nameStr = cleanText.substring(matchRank[0].length).replace(reExact, '').trim();
                 } else {
                     rankLine = `PM ${reExact}`;
                     nameStr = cleanText.replace(reExact, '').trim();
                 }
 
+                // Remove eventual prefixo "PM " redundante que venha logo no inicio do nome extraído
+                nameStr = nameStr.replace(/^\bPM\b/i, '').trim();
                 nameStr = nameStr.replace(/^\d+[\.\)]?\s*/, '').trim();
 
                 policeDatabase.push({
