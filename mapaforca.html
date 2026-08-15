@@ -1291,7 +1291,7 @@
         let maxNum = 0;
         stationsList.forEach(st => {
             if (st.startsWith('cpp')) {
-                const n = parseInt(st.replace('cpp', ''), 10);
+                const n = parseInt(st.replace('cpp', ''), 15);
                 if (!isNaN(n) && n > maxNum) maxNum = n;
             }
         });
