@@ -1026,7 +1026,7 @@
     let currentEscalaID = 'Não especificado';
     let currentEscalaAisp = 'Não especificado';
     // Inserido o CPP 'comandante' antes do cpp1
-    let stationsList = ['comandante', ...Array.from({length: 15}, (_, i) => `cpp${i + 1}`)];
+    let stationsList = ['comandante', ...Array.from({length: 10}, (_, i) => `cpp${i + 1}`)];
 
     const STORAGE_POLICE = 'pmesp_police_db';
     const STORAGE_QTH = 'pmesp_qth_data';
@@ -1235,7 +1235,7 @@
             try {
                 stationsList = JSON.parse(saved);
             } catch (e) {
-                stationsList = ['comandante', ...Array.from({length: 15}, (_, i) => `cpp${i + 1}`)];
+                stationsList = ['comandante', ...Array.from({length: 10}, (_, i) => `cpp${i + 1}`)];
             }
         }
     }
@@ -1291,7 +1291,7 @@
         let maxNum = 0;
         stationsList.forEach(st => {
             if (st.startsWith('cpp')) {
-                const n = parseInt(st.replace('cpp', ''), 15);
+                const n = parseInt(st.replace('cpp', ''), 10);
                 if (!isNaN(n) && n > maxNum) maxNum = n;
             }
         });
