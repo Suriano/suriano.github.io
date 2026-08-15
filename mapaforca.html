@@ -1657,59 +1657,71 @@
         saveAllToLocalStorage();
     }
 
+
+
     function renderGeneralInfo(idEscala, tipoDelegada, localOriginal, dataInicio, dataTermino, comandante) {
-        const savedPhone = localStorage.getItem(STORAGE_CMD_PHONE) || '';
-        const savedTipo = localStorage.getItem(STORAGE_ESCALA_TIPO) || tipoDelegada;
-        const savedCmd = localStorage.getItem(STORAGE_COMANDANTE) || comandante;
+    const savedPhone = localStorage.getItem(STORAGE_CMD_PHONE) || '';
+    const savedTipo = localStorage.getItem(STORAGE_ESCALA_TIPO) || tipoDelegada;
+    const savedCmd = localStorage.getItem(STORAGE_COMANDANTE) || comandante;
+    
+    // Recupera ou define estados iniciais para novos campos editáveis
+    const savedLocal = localStorage.getItem('pmesp_local_orig') || localOriginal;
+    const savedInicio = localStorage.getItem('pmesp_data_inicio') || dataInicio;
+    const savedTermino = localStorage.getItem('pmesp_data_termino') || dataTermino;
 
-        generalInfoHTML = `
-            <div class="info-item">
-                <div class="info-label">ID da Escala</div>
-                <div class="info-val">${idEscala}</div>
+    generalInfoHTML = `
+        <div class="info-item">
+            <div class="info-label">ID da Escala</div>
+            <div class="info-val">${idEscala}</div>
+        </div>
+        <div class="info-item editable-item">
+            <div class="info-label">Tipo de Delegada</div>
+            <div class="info-val">
+                <input type="text" id="input-escala-tipo" class="editable-input" value="${savedTipo}" oninput="handleEscalaTipoInput(this.value)">
+                <span id="print-escala-tipo" class="editable-print-display">${savedTipo}</span>
             </div>
-            <div class="info-item editable-item">
-                <div class="info-label"> Tipo de Delegada</div>
-                <div class="info-val">
-                    <input type="text" id="input-escala-tipo" class="editable-input" value="${savedTipo}" oninput="handleEscalaTipoInput(this.value)">
-                    <span id="print-escala-tipo" class="editable-print-display">${savedTipo.trim() !== '' ? savedTipo : 'Não especificado'}</span>
-                </div>
+        </div>
+        <div class="info-item editable-item">
+            <div class="info-label">Local Original</div>
+            <div class="info-val">
+                <input type="text" class="editable-input" value="${savedLocal}" oninput="localStorage.setItem('pmesp_local_orig', this.value); document.getElementById('print-local').innerText=this.value;">
+                <span id="print-local" class="editable-print-display">${savedLocal}</span>
             </div>
-            <div class="info-item">
-                <div class="info-label">Local Original</div>
-                <div class="info-val">${localOriginal}</div>
+        </div>
+        <div class="info-item editable-item">
+            <div class="info-label">Data/Hora Início</div>
+            <div class="info-val">
+                <input type="text" class="editable-input" value="${savedInicio}" oninput="localStorage.setItem('pmesp_data_inicio', this.value); document.getElementById('print-inicio').innerText=this.value;">
+                <span id="print-inicio" class="editable-print-display">${savedInicio}</span>
             </div>
-            <div class="info-item">
-                <div class="info-label">Data/Hora Início</div>
-                <div class="info-val">${dataInicio}</div>
+        </div>
+        <div class="info-item editable-item">
+            <div class="info-label">Data/Hora Término</div>
+            <div class="info-val">
+                <input type="text" class="editable-input" value="${savedTermino}" oninput="localStorage.setItem('pmesp_data_termino', this.value); document.getElementById('print-termino').innerText=this.value;">
+                <span id="print-termino" class="editable-print-display">${savedTermino}</span>
             </div>
-            <div class="info-item">
-                <div class="info-label">Data/Hora Término</div>
-                <div class="info-val">${dataTermino}</div>
+        </div>
+        <div class="info-item editable-item">
+            <div class="info-label">Comandante da Escala</div>
+            <div class="info-val">
+                <input type="text" id="input-comandante" class="editable-input" value="${savedCmd}" oninput="handleComandanteInput(this.value)">
+                <span id="print-comandante" class="editable-print-display">${savedCmd}</span>
             </div>
-            <div class="info-item editable-item">
-                <div class="info-label"> Comandante da Escala</div>
-                <div class="info-val">
-                    <input type="text" id="input-comandante" class="editable-input" value="${savedCmd}" oninput="handleComandanteInput(this.value)">
-                    <span id="print-comandante" class="editable-print-display">${savedCmd.trim() !== '' ? savedCmd : 'Não informado'}</span>
-                </div>
+        </div>
+        <div class="info-item editable-item">
+            <div class="info-label">Celular do Comandante</div>
+            <div class="info-val">
+                <input type="tel" id="input-cmd-phone" class="phone-input" value="${savedPhone}" oninput="handleCmdPhoneInput(this.value)">
+                <span id="print-cmd-phone" class="phone-print-display">${savedPhone || 'Não informado'}</span>
             </div>
-            <div class="info-item editable-item">
-                <div class="info-label"> Celular do Comandante</div>
-                <div class="info-val">
-                    <input type="tel" id="input-cmd-phone" class="phone-input" placeholder="(11) 9XXXX-XXXX" value="${savedPhone}" oninput="handleCmdPhoneInput(this.value)">
-                    <span id="print-cmd-phone" class="phone-print-display">${savedPhone.trim() !== '' ? savedPhone : 'Não informado'}</span>
-                </div>
-            </div>
-            <div class="info-item highlight-item">
-                <div class="info-label"> Escalados (PDF)</div>
-                <div class="info-val" id="escalados-count-val">${policeDatabase.length} ${policeDatabase.length === 1 ? 'policial' : 'policiais'}</div>
-            </div>
-        `;
+        </div>
+    `;
+    document.getElementById('general-info-grid').innerHTML = generalInfoHTML;
+}
 
-        document.getElementById('general-info-grid').innerHTML = generalInfoHTML;
-    }
 
-    function renderKanban() {
+function renderKanban() {
         const allStations = ['unassigned', ...stationsList];
 
         allStations.forEach(st => {
