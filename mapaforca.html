@@ -170,12 +170,6 @@
             display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin-top: 15px;
         }
 
-        /* Faz com que a primeira coluna (Não Alocados) ocupe toda a largura da linha superior */
-        .kanban-board .station-column:first-child {
-        grid-column: 1 / -1;
-        }
-        
-
         .station-column {
             background: #f8fafc; border: 2px solid var(--border-color); border-radius: 10px;
             padding: 12px; min-height: 240px; display: flex; flex-direction: column; gap: 8px;
