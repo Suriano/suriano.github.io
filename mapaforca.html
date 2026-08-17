@@ -753,7 +753,7 @@
             </div>
             <div class="form-group">
                 <label for="pdf-line-12"> 12ª Linha (Data/Hora):</label>
-                <input type="text" id="pdf-line-12">
+                <input type="text" id="pdf-line-12" oninput="handlePdfLine12Input(this.value)">
             </div>
             <div class="form-group">
                 <label for="pdf-line-last"> Última Linha:</label>
@@ -1351,6 +1351,10 @@
     const STORAGE_ESCALA_ID = 'pmesp_escala_id';
     const STORAGE_ESCALA_AISP = 'pmesp_escala_aisp';
 
+    const STORAGE_PDF_LINE_12 = 'pmesp_pdf_line_12';
+
+    
+
     window.addEventListener('DOMContentLoaded', () => {
         loadStationsList();
         initKanbanColumns();
@@ -1365,6 +1369,14 @@
         document.getElementById('catalog-modal').classList.remove('active');
     }
 
+
+// Função para capturar e salvar o valor digitado
+function handlePdfLine12Input(value) {
+    localStorage.setItem(STORAGE_PDF_LINE_12, value);
+}
+
+
+    
     function openFaltasModal() {
         const ausentes = policeDatabase.filter(p => !p.presente);
         let ausentesText = '';
@@ -2427,6 +2439,16 @@ function renderKanban() {
         const savedId = localStorage.getItem(STORAGE_ESCALA_ID);
         const savedAisp = localStorage.getItem(STORAGE_ESCALA_AISP);
 
+
+const savedLine12 = localStorage.getItem(STORAGE_PDF_LINE_12);
+if (savedLine12) {
+    const line12Input = document.getElementById('pdf-line-12');
+    if (line12Input) {
+        line12Input.value = savedLine12;
+    }
+}
+
+        
         if (savedId) currentEscalaID = savedId;
         if (savedAisp) currentEscalaAisp = savedAisp;
 
