@@ -3,370 +3,575 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Mapa Força - CPTM</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <title>Distribuição de Estações - CPTM</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 15px; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #075e54; font-size: 1.2rem; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; }
-        input[type="file"], textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 0.9rem; }
-        textarea { resize: vertical; height: 70px; }
-        button { background-color: #25d366; color: white; border: none; padding: 12px; width: 100%; font-size: 1rem; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 5px; display: flex; align-items: center; justify-content: center; }
-        button:hover { background-color: #128c7e; }
-        .file-list { background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; padding: 8px; margin-top: 8px; max-height: 150px; overflow-y: auto; font-size: 0.85rem; }
-        .file-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #eee; }
-        .file-info { display: flex; flex-direction: column; }
-        .file-estacao { font-size: 0.75rem; color: #075e54; font-weight: bold; margin-top: 2px; }
-        .btn-remove { background: #ff4d4d; color: white; border: none; border-radius: 3px; padding: 4px 8px; cursor: pointer; font-size: 0.75rem; width: auto; }
-        #resultado { margin-top: 15px; background: #e5ddd5; padding: 15px; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 0.85rem; line-height: 1.4; display: none; width: 100%; box-sizing: border-box; border: 1px solid #ccc; resize: vertical; height: 250px; }
-        .btn-copiar { background-color: #34b7f1; margin-top: 10px; display: none; }
-        .btn-whatsapp { background-color: #25d366; margin-top: 5px; display: none; }
-        .btn-limpar { background-color: #ff4d4d; margin-top: 20px; display: block; }
-        .btn-limpar:hover { background-color: #cc0000; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        h1 {
+            color: #0056b3;
+        }
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #0056b3;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .empty-message {
+            text-align: center;
+            color: #777;
+            font-style: italic;
+            padding: 20px;
+        }
+        .top-filter {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #eef2f7;
+            border-radius: 6px;
+            border: 1px solid #d1d9e0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            display: none;
+        }
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .top-filter label {
+            font-weight: bold;
+        }
+        .top-filter select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        .whatsapp-output-top {
+            background-color: #f9f9f9;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            display: none;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .btn-whatsapp {
+            background-color: #25D366;
+        }
+        .btn-whatsapp:hover {
+            background-color: #1ebe57;
+        }
+        .btn-copy {
+            background-color: #0056b3;
+        }
+        .btn-copy:hover {
+            background-color: #004494;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>MAPA FORÇA - DEJEM CPTM</h2>
+    <h1>Distribuição de Estações por Dia - CPTM</h1>
+    <p>Selecione o arquivo PDF correspondente para carregar e ordenar todos os dias do mês:</p>
     
-    <div class="form-group">
-        <label for="pdfFiles">Adicionar Escalas (PDF):</label>
-        <input type="file" id="pdfFiles" accept="application/pdf" multiple onchange="adicionarArquivos(this)">
-        <div id="listaArquivosContainer" class="file-list" style="display: none;">
-            <div id="arquivosAdicionados"></div>
+    <div class="input-group">
+        <input type="file" id="pdfFile" accept="application/pdf">
+        
+        <div class="top-filter" id="filter-section">
+            <div class="filter-controls">
+                <div>
+                    <label for="selectDia">Escolher Dia:</label>
+                    <select id="selectDia">
+                        <option value="">Selecione o dia...</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="selectTurno">Escolher Horário (Turno):</label>
+                    <select id="selectTurno">
+                        <option value="">Selecione o turno...</option>
+                        <option value="t07_15">07h às 15h</option>
+                        <option value="t15_23">15h às 23h</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="whatsappBoxTop" class="whatsapp-output-top"></div>
+        
+        <!-- Botões de Ação (WhatsApp e Copiar) -->
+        <div id="actionButtons" class="action-buttons">
+            <a id="btnWhatsAppLink" href="#" target="_blank" class="btn btn-whatsapp">
+                💬 Enviar para o WhatsApp
+            </a>
+            <button id="btnCopy" class="btn btn-copy">
+                📋 Copiar Texto
+            </button>
         </div>
     </div>
 
-    <div class="form-group">
-        <label for="faltosos">Novidades - Falta / Exclusão (Nomes ou RE separados por ponto e vírgula):</label>
-        <textarea id="faltosos" placeholder="Ex: Sd Silva; 190190-0; Cb Souza"></textarea>
+    <div id="table-container">
+        <p class="empty-message">Nenhum arquivo selecionado ou dados carregados.</p>
     </div>
-
-    <button onclick="processarPDFs()">Gerar Mapa Força</button>
-
-    <textarea id="resultado" placeholder="O resultado gerado aparecerá aqui e você poderá editá-lo livremente..."></textarea>
-    <button id="btnCopiar" class="btn-copiar" onclick="copiarTexto()">Copiar para o WhatsApp</button>
-    <button id="btnWhatsapp" class="btn-whatsapp" onclick="abrirWhatsApp()">
-        <svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle; margin-right: 8px;" fill="white">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.955c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.005 0C5.37 0 .002 5.368.002 12.006c0 2.092.548 4.135 1.593 5.922L.002 24l6.332-1.654a11.802 11.802 0 0 0 5.673 1.443h.005c6.635 0 12.003-5.368 12.003-12.005 0-3.21-1.249-6.233-3.518-8.503"/>
-        </svg>
-        Abrir no WhatsApp
-    </button>
-    <button id="btnLimpar" class="btn-limpar" onclick="limparTudo()">
-        <svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle; margin-right: 8px;" fill="white">
-            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-        </svg>
-        Limpar Tudo
-    </button>
 </div>
 
 <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    const dadosMesCompleto = [
+        { dia: 10, semana: "SEGUNDA", estacao: "Santo André", aisp: "83639", t07_15: "8661055", t15_23: "8661087" },
+        { dia: 10, semana: "SEGUNDA", estacao: "P. Saladino", aisp: "83640", t07_15: "8661123", t15_23: "8661158" },
+        { dia: 10, semana: "SEGUNDA", estacao: "Utinga", aisp: "83642", t07_15: "8661182", t15_23: "8661397" },
+        { dia: 10, semana: "SEGUNDA", estacao: "Capuava", aisp: "84271", t07_15: "8661482", t15_23: "8661600" },
+        { dia: 10, semana: "SEGUNDA", estacao: "São Caetano", aisp: "83925", t07_15: "8661655", t15_23: "8661715" },
+        { dia: 10, semana: "SEGUNDA", estacao: "Rio Grande", aisp: "83926", t07_15: "8661761", t15_23: "8661786" },
+        { dia: 10, semana: "SEGUNDA", estacao: "R. Pires", aisp: "85621", t07_15: "8661838", t15_23: "8661873" },
+        { dia: 10, semana: "SEGUNDA", estacao: "Mauá", aisp: "83643", t07_15: "8661896", t15_23: "8661950" },
+        { dia: 10, semana: "SEGUNDA", estacao: "Guapituba", aisp: "85620", t07_15: "8662051", t15_23: "8662101" },
 
-    window.onload = function() {
-        if (localStorage.getItem('faltosos')) {
-            document.getElementById('faltosos').value = localStorage.getItem('faltosos');
-        }
-        if (localStorage.getItem('resultado')) {
-            const textareaResultado = document.getElementById('resultado');
-            textareaResultado.value = localStorage.getItem('resultado');
-            textareaResultado.style.display = 'block';
-            document.getElementById('btnCopiar').style.display = 'flex';
-            document.getElementById('btnWhatsapp').style.display = 'flex';
-        }
-    };
+        { dia: 11, semana: "TERÇA", estacao: "Santo André", aisp: "83639", t07_15: "8661056", t15_23: "8661088" },
+        { dia: 11, semana: "TERÇA", estacao: "P. Saladino", aisp: "83640", t07_15: "8661124", t15_23: "8661159" },
+        { dia: 11, semana: "TERÇA", estacao: "Utinga", aisp: "83642", t07_15: "8661183", t15_23: "8661398" },
+        { dia: 11, semana: "TERÇA", estacao: "Capuava", aisp: "84271", t07_15: "8661483", t15_23: "8661601" },
+        { dia: 11, semana: "TERÇA", estacao: "São Caetano", aisp: "83925", t07_15: "8661656", t15_23: "8661716" },
+        { dia: 11, semana: "TERÇA", estacao: "Rio Grande", aisp: "83926", t07_15: "8661762", t15_23: "8661787" },
+        { dia: 11, semana: "TERÇA", estacao: "R. Pires", aisp: "85621", t07_15: "8661839", t15_23: "8661874" },
+        { dia: 11, semana: "TERÇA", estacao: "Mauá", aisp: "83643", t07_15: "8661897", t15_23: "8661951" },
+        { dia: 11, semana: "TERÇA", estacao: "Guapituba", aisp: "85620", t07_15: "8662052", t15_23: "8662106" },
 
-    document.getElementById('faltosos').addEventListener('input', function() {
-        localStorage.setItem('faltosos', this.value);
-    });
+        { dia: 12, semana: "QUARTA", estacao: "Santo André", aisp: "83639", t07_15: "8661058", t15_23: "8661069" },
+        { dia: 12, semana: "QUARTA", estacao: "P. Saladino", aisp: "83640", t07_15: "8661125", t15_23: "8661160" },
+        { dia: 12, semana: "QUARTA", estacao: "Utinga", aisp: "83642", t07_15: "8661184", t15_23: "8661399" },
+        { dia: 12, semana: "QUARTA", estacao: "Capuava", aisp: "84271", t07_15: "8661484", t15_23: "8661602" },
+        { dia: 12, semana: "QUARTA", estacao: "São Caetano", aisp: "83925", t07_15: "8661657", t15_23: "8661717" },
+        { dia: 12, semana: "QUARTA", estacao: "Rio Grande", aisp: "83926", t07_15: "8661763", t15_23: "8661788" },
+        { dia: 12, semana: "QUARTA", estacao: "R. Pires", aisp: "85621", t07_15: "8661840", t15_23: "8661875" },
+        { dia: 12, semana: "QUARTA", estacao: "Mauá", aisp: "83643", t07_15: "8661898", t15_23: "8661952" },
+        { dia: 12, semana: "QUARTA", estacao: "Guapituba", aisp: "85620", t07_15: "8662053", t15_23: "8662109" },
 
-    function limparTudo() {
-        if (confirm("Deseja realmente limpar todos os dados salvos?")) {
-            localStorage.clear();
-            location.reload();
-        }
-    }
+        { dia: 13, semana: "QUINTA", estacao: "Santo André", aisp: "83639", t07_15: "8661059", t15_23: "8661090" },
+        { dia: 13, semana: "QUINTA", estacao: "P. Saladino", aisp: "83640", t07_15: "8661126", t15_23: "8661161" },
+        { dia: 13, semana: "QUINTA", estacao: "Utinga", aisp: "83642", t07_15: "8661185", t15_23: "8661400" },
+        { dia: 13, semana: "QUINTA", estacao: "Capuava", aisp: "84271", t07_15: "8661485", t15_23: "8661603" },
+        { dia: 13, semana: "QUINTA", estacao: "São Caetano", aisp: "83925", t07_15: "8661658", t15_23: "8661718" },
+        { dia: 13, semana: "QUINTA", estacao: "Rio Grande", aisp: "83926", t07_15: "8661764", t15_23: "8661789" },
+        { dia: 13, semana: "QUINTA", estacao: "R. Pires", aisp: "85621", t07_15: "8661841", t15_23: "8661876" },
+        { dia: 13, semana: "QUINTA", estacao: "Mauá", aisp: "83643", t07_15: "8661899", t15_23: "8661953" },
+        { dia: 13, semana: "QUINTA", estacao: "Guapituba", aisp: "85620", t07_15: "8662054", t15_23: "8662112" },
 
-    function salvarResultado(texto) {
-        localStorage.setItem('resultado', texto);
-    }
+        { dia: 14, semana: "SEXTA", estacao: "Santo André", aisp: "83639", t07_15: "8661060", t15_23: "8661091" },
+        { dia: 14, semana: "SEXTA", estacao: "P. Saladino", aisp: "83640", t07_15: "8661127", t15_23: "8661162" },
+        { dia: 14, semana: "SEXTA", estacao: "Utinga", aisp: "83642", t07_15: "8661186", t15_23: "8661401" },
+        { dia: 14, semana: "SEXTA", estacao: "Capuava", aisp: "84271", t07_15: "8661486", t15_23: "8661604" },
+        { dia: 14, semana: "SEXTA", estacao: "São Caetano", aisp: "83925", t07_15: "8661659", t15_23: "8661719" },
+        { dia: 14, semana: "SEXTA", estacao: "Rio Grande", aisp: "83926", t07_15: "8661765", t15_23: "8661790" },
+        { dia: 14, semana: "SEXTA", estacao: "R. Pires", aisp: "85621", t07_15: "8661842", t15_23: "8661877" },
+        { dia: 14, semana: "SEXTA", estacao: "Mauá", aisp: "83643", t07_15: "8661900", t15_23: "8661954" },
+        { dia: 14, semana: "SEXTA", estacao: "Guapituba", aisp: "85620", t07_15: "8662055", t15_23: "8662113" },
 
-    let listaGlobalArquivos = [];
-    const estacoesCPTM = [
-        "São Caetano do Sul", "Utinga", "Prefeito Saladino", "Santo André", 
-        "Capuava", "Mauá", "Guapituba", "Ribeirão Pires", "Rio Grande da Serra"
+        { dia: 15, semana: "SABADO", estacao: "Santo André", aisp: "83639", t07_15: "8661061", t15_23: "8661092" },
+        { dia: 15, semana: "SABADO", estacao: "P. Saladino", aisp: "83640", t07_15: "8661128", t15_23: "8661163" },
+        { dia: 15, semana: "SABADO", estacao: "Utinga", aisp: "83642", t07_15: "8661187", t15_23: "8661402" },
+        { dia: 15, semana: "SABADO", estacao: "Capuava", aisp: "84271", t07_15: "8661487", t15_23: "8661605" },
+        { dia: 15, semana: "SABADO", estacao: "São Caetano", aisp: "83925", t07_15: "8661660", t15_23: "8661720" },
+        { dia: 15, semana: "SABADO", estacao: "Rio Grande", aisp: "83926", t07_15: "8661766", t15_23: "8661791" },
+        { dia: 15, semana: "SABADO", estacao: "R. Pires", aisp: "85621", t07_15: "8661843", t15_23: "8661878" },
+        { dia: 15, semana: "SABADO", estacao: "Mauá", aisp: "83643", t07_15: "8661901", t15_23: "8661955" },
+        { dia: 15, semana: "SABADO", estacao: "Guapituba", aisp: "85620", t07_15: "8662056", t15_23: "8662114" },
+
+        { dia: 16, semana: "DOMINGO", estacao: "Santo André", aisp: "83639", t07_15: "8661062", t15_23: "8661093" },
+        { dia: 16, semana: "DOMINGO", estacao: "P. Saladino", aisp: "83640", t07_15: "8661129", t15_23: "8661164" },
+        { dia: 16, semana: "DOMINGO", estacao: "Utinga", aisp: "83642", t07_15: "8661188", t15_23: "8661403" },
+        { dia: 16, semana: "DOMINGO", estacao: "Capuava", aisp: "84271", t07_15: "8661488", t15_23: "8661606" },
+        { dia: 16, semana: "DOMINGO", estacao: "São Caetano", aisp: "83925", t07_15: "8661661", t15_23: "8661721" },
+        { dia: 16, semana: "DOMINGO", estacao: "Rio Grande", aisp: "83926", t07_15: "8661767", t15_23: "8661792" },
+        { dia: 16, semana: "DOMINGO", estacao: "R. Pires", aisp: "85621", t07_15: "8661844", t15_23: "8661879" },
+        { dia: 16, semana: "DOMINGO", estacao: "Mauá", aisp: "83643", t07_15: "8661902", t15_23: "8661956" },
+        { dia: 16, semana: "DOMINGO", estacao: "Guapituba", aisp: "85620", t07_15: "8662057", t15_23: "8662115" },
+
+        { dia: 17, semana: "SEGUNDA", estacao: "Santo André", aisp: "83639", t07_15: "8661063", t15_23: "8661094" },
+        { dia: 17, semana: "SEGUNDA", estacao: "P. Saladino", aisp: "83640", t07_15: "8661130", t15_23: "8661165" },
+        { dia: 17, semana: "SEGUNDA", estacao: "Utinga", aisp: "83642", t07_15: "8661189", t15_23: "8661404" },
+        { dia: 17, semana: "SEGUNDA", estacao: "Capuava", aisp: "84271", t07_15: "8661489", t15_23: "8661607" },
+        { dia: 17, semana: "SEGUNDA", estacao: "São Caetano", aisp: "83925", t07_15: "8661662", t15_23: "8661722" },
+        { dia: 17, semana: "SEGUNDA", estacao: "Rio Grande", aisp: "83926", t07_15: "8661768", t15_23: "8661793" },
+        { dia: 17, semana: "SEGUNDA", estacao: "R. Pires", aisp: "85621", t07_15: "8661849", t15_23: "8661880" },
+        { dia: 17, semana: "SEGUNDA", estacao: "Mauá", aisp: "83643", t07_15: "8661903", t15_23: "8661957" },
+        { dia: 17, semana: "SEGUNDA", estacao: "Guapituba", aisp: "85620", t07_15: "8662058", t15_23: "8662116" },
+
+        { dia: 18, semana: "TERÇA", estacao: "Santo André", aisp: "83639", t07_15: "8668283", t15_23: "8668305" },
+        { dia: 18, semana: "TERÇA", estacao: "P. Saladino", aisp: "83640", t07_15: "8668336", t15_23: "8668400" },
+        { dia: 18, semana: "TERÇA", estacao: "Utinga", aisp: "83642", t07_15: "8668451", t15_23: "8668496" },
+        { dia: 18, semana: "TERÇA", estacao: "Capuava", aisp: "84271", t07_15: "8668519", t15_23: "8668550" },
+        { dia: 18, semana: "TERÇA", estacao: "São Caetano", aisp: "83925", t07_15: "8668583", t15_23: "8668687" },
+        { dia: 18, semana: "TERÇA", estacao: "Rio Grande", aisp: "83926", t07_15: "8668723", t15_23: "8668784" },
+        { dia: 18, semana: "TERÇA", estacao: "R. Pires", aisp: "85621", t07_15: "8668825", t15_23: "8668864" },
+        { dia: 18, semana: "TERÇA", estacao: "Mauá", aisp: "83643", t07_15: "8669501", t15_23: "8669567" },
+        { dia: 18, semana: "TERÇA", estacao: "Guapituba", aisp: "85620", t07_15: "8669609", t15_23: "8669673" },
+
+        { dia: 19, semana: "QUARTA", estacao: "Santo André", aisp: "83639", t07_15: "8668284", t15_23: "8668306" },
+        { dia: 19, semana: "QUARTA", estacao: "P. Saladino", aisp: "83640", t07_15: "8668337", t15_23: "8668401" },
+        { dia: 19, semana: "QUARTA", estacao: "Utinga", aisp: "83642", t07_15: "8668452", t15_23: "8668497" },
+        { dia: 19, semana: "QUARTA", estacao: "Capuava", aisp: "84271", t07_15: "8668520", t15_23: "8668551" },
+        { dia: 19, semana: "QUARTA", estacao: "São Caetano", aisp: "83925", t07_15: "8668584", t15_23: "8668688" },
+        { dia: 19, semana: "QUARTA", estacao: "Rio Grande", aisp: "83926", t07_15: "8668724", t15_23: "8668785" },
+        { dia: 19, semana: "QUARTA", estacao: "R. Pires", aisp: "85621", t07_15: "8668826", t15_23: "8668866" },
+        { dia: 19, semana: "QUARTA", estacao: "Mauá", aisp: "83643", t07_15: "8669505", t15_23: "8669568" },
+        { dia: 19, semana: "QUARTA", estacao: "Guapituba", aisp: "85620", t07_15: "8669610", t15_23: "8669674" },
+
+        { dia: 20, semana: "QUINTA", estacao: "Santo André", aisp: "83639", t07_15: "8668285", t15_23: "8668307" },
+        { dia: 20, semana: "QUINTA", estacao: "P. Saladino", aisp: "83640", t07_15: "8668338", t15_23: "8668402" },
+        { dia: 20, semana: "QUINTA", estacao: "Utinga", aisp: "83642", t07_15: "8668453", t15_23: "8668498" },
+        { dia: 20, semana: "QUINTA", estacao: "Capuava", aisp: "84271", t07_15: "8668521", t15_23: "8668552" },
+        { dia: 20, semana: "QUINTA", estacao: "São Caetano", aisp: "83925", t07_15: "8668585", t15_23: "8668689" },
+        { dia: 20, semana: "QUINTA", estacao: "Rio Grande", aisp: "83926", t07_15: "8668725", t15_23: "8668786" },
+        { dia: 20, semana: "QUINTA", estacao: "R. Pires", aisp: "85621", t07_15: "8668827", t15_23: "8668867" },
+        { dia: 20, semana: "QUINTA", estacao: "Mauá", aisp: "83643", t07_15: "8669506", t15_23: "8669569" },
+        { dia: 20, semana: "QUINTA", estacao: "Guapituba", aisp: "85620", t07_15: "8669611", t15_23: "8669675" },
+
+        { dia: 21, semana: "SEXTA", estacao: "Santo André", aisp: "83639", t07_15: "8668286", t15_23: "8668308" },
+        { dia: 21, semana: "SEXTA", estacao: "P. Saladino", aisp: "83640", t07_15: "8668339", t15_23: "8668403" },
+        { dia: 21, semana: "SEXTA", estacao: "Utinga", aisp: "83642", t07_15: "8668454", t15_23: "8668500" },
+        { dia: 21, semana: "SEXTA", estacao: "Capuava", aisp: "84271", t07_15: "8668522", t15_23: "8668553" },
+        { dia: 21, semana: "SEXTA", estacao: "São Caetano", aisp: "83925", t07_15: "8668586", t15_23: "8668690" },
+        { dia: 21, semana: "SEXTA", estacao: "Rio Grande", aisp: "83926", t07_15: "8668726", t15_23: "8668787" },
+        { dia: 21, semana: "SEXTA", estacao: "R. Pires", aisp: "85621", t07_15: "8668828", t15_23: "8668868" },
+        { dia: 21, semana: "SEXTA", estacao: "Mauá", aisp: "83643", t07_15: "8669508", t15_23: "8669570" },
+        { dia: 21, semana: "SEXTA", estacao: "Guapituba", aisp: "85620", t07_15: "8669612", t15_23: "8669676" },
+
+        { dia: 22, semana: "SABADO", estacao: "Santo André", aisp: "83639", t07_15: "8668287", t15_23: "8668309" },
+        { dia: 22, semana: "SABADO", estacao: "P. Saladino", aisp: "83640", t07_15: "8668340", t15_23: "8668404" },
+        { dia: 22, semana: "SABADO", estacao: "Utinga", aisp: "83642", t07_15: "8668455", t15_23: "8668501" },
+        { dia: 22, semana: "SABADO", estacao: "Capuava", aisp: "84271", t07_15: "8668523", t15_23: "8668554" },
+        { dia: 22, semana: "SABADO", estacao: "São Caetano", aisp: "83925", t07_15: "8668590", t15_23: "8668691" },
+        { dia: 22, semana: "SABADO", estacao: "Rio Grande", aisp: "83926", t07_15: "8668727", t15_23: "8668790" },
+        { dia: 22, semana: "SABADO", estacao: "R. Pires", aisp: "85621", t07_15: "8668829", t15_23: "8668869" },
+        { dia: 22, semana: "SABADO", estacao: "Mauá", aisp: "83643", t07_15: "8669510", t15_23: "8669571" },
+        { dia: 22, semana: "SABADO", estacao: "Guapituba", aisp: "85620", t07_15: "8669613", t15_23: "8669677" },
+
+        { dia: 23, semana: "DOMINGO", estacao: "Santo André", aisp: "83639", t07_15: "8668288", t15_23: "8668310" },
+        { dia: 23, semana: "DOMINGO", estacao: "P. Saladino", aisp: "83640", t07_15: "8668341", t15_23: "8668405" },
+        { dia: 23, semana: "DOMINGO", estacao: "Utinga", aisp: "83642", t07_15: "8668456", t15_23: "8668502" },
+        { dia: 23, semana: "DOMINGO", estacao: "Capuava", aisp: "84271", t07_15: "8668524", t15_23: "8668556" },
+        { dia: 23, semana: "DOMINGO", estacao: "São Caetano", aisp: "83925", t07_15: "8668592", t15_23: "8668692" },
+        { dia: 23, semana: "DOMINGO", estacao: "Rio Grande", aisp: "83926", t07_15: "8668728", t15_23: "8668798" },
+        { dia: 23, semana: "DOMINGO", estacao: "R. Pires", aisp: "85621", t07_15: "8668830", t15_23: "8668870" },
+        { dia: 23, semana: "DOMINGO", estacao: "Mauá", aisp: "83643", t07_15: "8669511", t15_23: "8669572" },
+        { dia: 23, semana: "DOMINGO", estacao: "Guapituba", aisp: "85620", t07_15: "8669614", t15_23: "8669678" },
+
+        { dia: 24, semana: "SEGUNDA", estacao: "Santo André", aisp: "83639", t07_15: "8668289", t15_23: "8668311" },
+        { dia: 24, semana: "SEGUNDA", estacao: "P. Saladino", aisp: "83640", t07_15: "8668342", t15_23: "8668406" },
+        { dia: 24, semana: "SEGUNDA", estacao: "Utinga", aisp: "83642", t07_15: "8668457", t15_23: "8668503" },
+        { dia: 24, semana: "SEGUNDA", estacao: "Capuava", aisp: "84271", t07_15: "8668525", t15_23: "8668561" },
+        { dia: 24, semana: "SEGUNDA", estacao: "São Caetano", aisp: "83925", t07_15: "8668596", t15_23: "8668694" },
+        { dia: 24, semana: "SEGUNDA", estacao: "Rio Grande", aisp: "83926", t07_15: "8668729", t15_23: "8668799" },
+        { dia: 24, semana: "SEGUNDA", estacao: "R. Pires", aisp: "85621", t07_15: "8668831", t15_23: "8668870" },
+        { dia: 24, semana: "SEGUNDA", estacao: "Mauá", aisp: "83643", t07_15: "8669513", t15_23: "8669573" },
+        { dia: 24, semana: "SEGUNDA", estacao: "Guapituba", aisp: "85620", t07_15: "8669615", t15_23: "8669679" },
+
+        { dia: 25, semana: "TERÇA", estacao: "Santo André", aisp: "83639", t07_15: "8668290", t15_23: "8668312" },
+        { dia: 25, semana: "TERÇA", estacao: "P. Saladino", aisp: "83640", t07_15: "8668343", t15_23: "8668407" },
+        { dia: 25, semana: "TERÇA", estacao: "Utinga", aisp: "83642", t07_15: "8668458", t15_23: "8668504" },
+        { dia: 25, semana: "TERÇA", estacao: "Capuava", aisp: "84271", t07_15: "8668526", t15_23: "8668562" },
+        { dia: 25, semana: "TERÇA", estacao: "São Caetano", aisp: "83925", t07_15: "8668599", t15_23: "8668695" },
+        { dia: 25, semana: "TERÇA", estacao: "Rio Grande", aisp: "83926", t07_15: "8668730", t15_23: "8668800" },
+        { dia: 25, semana: "TERÇA", estacao: "R. Pires", aisp: "85621", t07_15: "8668832", t15_23: "8668872" },
+        { dia: 25, semana: "TERÇA", estacao: "Mauá", aisp: "83643", t07_15: "8669514", t15_23: "8669574" },
+        { dia: 25, semana: "TERÇA", estacao: "Guapituba", aisp: "85620", t07_15: "8669616", t15_23: "8669680" },
+
+        { dia: 26, semana: "QUARTA", estacao: "Santo André", aisp: "83639", t07_15: "8668291", t15_23: "8668313" },
+        { dia: 26, semana: "QUARTA", estacao: "P. Saladino", aisp: "83640", t07_15: "8668344", t15_23: "8658408" },
+        { dia: 26, semana: "QUARTA", estacao: "Utinga", aisp: "83642", t07_15: "8668459", t15_23: "8668505" },
+        { dia: 26, semana: "QUARTA", estacao: "Capuava", aisp: "84271", t07_15: "8668527", t15_23: "8668563" },
+        { dia: 26, semana: "QUARTA", estacao: "São Caetano", aisp: "83925", t07_15: "8668600", t15_23: "8668696" },
+        { dia: 26, semana: "QUARTA", estacao: "Rio Grande", aisp: "83926", t07_15: "8668731", t15_23: "8668801" },
+        { dia: 26, semana: "QUARTA", estacao: "R. Pires", aisp: "85621", t07_15: "8668833", t15_23: "8668874" },
+        { dia: 26, semana: "QUARTA", estacao: "Mauá", aisp: "83643", t07_15: "8669515", t15_23: "8669575" },
+        { dia: 26, semana: "QUARTA", estacao: "Guapituba", aisp: "85620", t07_15: "8669617", t15_23: "8669681" },
+
+        { dia: 27, semana: "QUINTA", estacao: "Santo André", aisp: "83639", t07_15: "8668292", t15_23: "8668314" },
+        { dia: 27, semana: "QUINTA", estacao: "P. Saladino", aisp: "83640", t07_15: "8668345", t15_23: "8668409" },
+        { dia: 27, semana: "QUINTA", estacao: "Utinga", aisp: "83642", t07_15: "8668460", t15_23: "8668506" },
+        { dia: 27, semana: "QUINTA", estacao: "Capuava", aisp: "84271", t07_15: "8668528", t15_23: "8668564" },
+        { dia: 27, semana: "QUINTA", estacao: "São Caetano", aisp: "83925", t07_15: "8668602", t15_23: "8668697" },
+        { dia: 27, semana: "QUINTA", estacao: "Rio Grande", aisp: "83926", t07_15: "8668732", t15_23: "8668802" },
+        { dia: 27, semana: "QUINTA", estacao: "R. Pires", aisp: "85621", t07_15: "8668835", t15_23: "8668875" },
+        { dia: 27, semana: "QUINTA", estacao: "Mauá", aisp: "83643", t07_15: "8669516", t15_23: "8669576" },
+        { dia: 27, semana: "QUINTA", estacao: "Guapituba", aisp: "85620", t07_15: "8669618", t15_23: "8669682" },
+
+        { dia: 28, semana: "SEXTA", estacao: "Santo André", aisp: "83639", t07_15: "8668293", t15_23: "8668315" },
+        { dia: 28, semana: "SEXTA", estacao: "P. Saladino", aisp: "83640", t07_15: "8668346", t15_23: "8668410" },
+        { dia: 28, semana: "SEXTA", estacao: "Utinga", aisp: "83642", t07_15: "8668461", t15_23: "8668507" },
+        { dia: 28, semana: "SEXTA", estacao: "Capuava", aisp: "84271", t07_15: "8668529", t15_23: "8668565" },
+        { dia: 28, semana: "SEXTA", estacao: "São Caetano", aisp: "83925", t07_15: "8668603", t15_23: "8668698" },
+        { dia: 28, semana: "SEXTA", estacao: "Rio Grande", aisp: "83926", t07_15: "8668733", t15_23: "8668803" },
+        { dia: 28, semana: "SEXTA", estacao: "R. Pires", aisp: "85621", t07_15: "8668836", t15_23: "8668876" },
+        { dia: 28, semana: "SEXTA", estacao: "Mauá", aisp: "83643", t07_15: "8669517", t15_23: "8669577" },
+        { dia: 28, semana: "SEXTA", estacao: "Guapituba", aisp: "85620", t07_15: "8669619", t15_23: "8669683" },
+
+        { dia: 29, semana: "SÁBADO", estacao: "Santo André", aisp: "83639", t07_15: "8668294", t15_23: "8668316" },
+        { dia: 29, semana: "SÁBADO", estacao: "P. Saladino", aisp: "83640", t07_15: "8668347", t15_23: "8668411" },
+        { dia: 29, semana: "SÁBADO", estacao: "Utinga", aisp: "83642", t07_15: "8668462", t15_23: "8668508" },
+        { dia: 29, semana: "SÁBADO", estacao: "Capuava", aisp: "84271", t07_15: "8668530", t15_23: "8668566" },
+        { dia: 29, semana: "SÁBADO", estacao: "São Caetano", aisp: "83925", t07_15: "8668604", t15_23: "8668699" },
+        { dia: 29, semana: "SÁBADO", estacao: "Rio Grande", aisp: "83926", t07_15: "8668734", t15_23: "8668804" },
+        { dia: 29, semana: "SÁBADO", estacao: "R. Pires", aisp: "85621", t07_15: "8668839", t15_23: "8668877" },
+        { dia: 29, semana: "SÁBADO", estacao: "Mauá", aisp: "83643", t07_15: "8669519", t15_23: "8669578" },
+        { dia: 29, semana: "SÁBADO", estacao: "Guapituba", aisp: "85620", t07_15: "8669620", t15_23: "8669684" },
+
+        { dia: 30, semana: "DOMINGO", estacao: "Santo André", aisp: "83639", t07_15: "8668295", t15_23: "8668317" },
+        { dia: 30, semana: "DOMINGO", estacao: "P. Saladino", aisp: "83640", t07_15: "8668348", t15_23: "8668412" },
+        { dia: 30, semana: "DOMINGO", estacao: "Utinga", aisp: "83642", t07_15: "8668463", t15_23: "8668509" },
+        { dia: 30, semana: "DOMINGO", estacao: "Capuava", aisp: "84271", t07_15: "8668531", t15_23: "8668567" },
+        { dia: 30, semana: "DOMINGO", estacao: "São Caetano", aisp: "83925", t07_15: "8668605", t15_23: "8668700" },
+        { dia: 30, semana: "DOMINGO", estacao: "Rio Grande", aisp: "83926", t07_15: "8668735", t15_23: "8668805" },
+        { dia: 30, semana: "DOMINGO", estacao: "R. Pires", aisp: "85621", t07_15: "8668840", t15_23: "8668878" },
+        { dia: 30, semana: "DOMINGO", estacao: "Mauá", aisp: "83643", t07_15: "8669521", t15_23: "8669579" },
+        { dia: 30, semana: "DOMINGO", estacao: "Guapituba", aisp: "85620", t07_15: "8669621", t15_23: "8669686" },
+
+        { dia: 31, semana: "SEGUNDA", estacao: "Santo André", aisp: "83639", t07_15: "8668296", t15_23: "8668318" },
+        { dia: 31, semana: "SEGUNDA", estacao: "P. Saladino", aisp: "83640", t07_15: "8668349", t15_23: "8668413" },
+        { dia: 31, semana: "SEGUNDA", estacao: "Utinga", aisp: "83642", t07_15: "8668464", t15_23: "8668510" },
+        { dia: 31, semana: "SEGUNDA", estacao: "Capuava", aisp: "84271", t07_15: "8668532", t15_23: "8668568" },
+        { dia: 31, semana: "SEGUNDA", estacao: "São Caetano", aisp: "83925", t07_15: "8668606", t15_23: "8668701" },
+        { dia: 31, semana: "SEGUNDA", estacao: "Rio Grande", aisp: "83926", t07_15: "8668736", t15_23: "8668806" },
+        { dia: 31, semana: "SEGUNDA", estacao: "R. Pires", aisp: "85621", t07_15: "8668841", t15_23: "8668879" },
+        { dia: 31, semana: "SEGUNDA", estacao: "Mauá", aisp: "83643", t07_15: "8669522", t15_23: "8669580" },
+        { dia: 31, semana: "SEGUNDA", estacao: "Guapituba", aisp: "85620", t07_15: "8669622", t15_23: "8669690" }
     ];
 
-    async function adicionarArquivos(input) {
-        if (input.files.length > 0) {
-            for (let i = 0; i < input.files.length; i++) {
-                let arquivoObj = { file: input.files[i], texto: "", estacao: "Lendo..." };
-                listaGlobalArquivos.push(arquivoObj);
-                extrairTextoEIdentificarEstacao(arquivoObj);
-            }
-            input.value = "";
-        }
-    }
+    const fileInput = document.getElementById('pdfFile');
+    const tableContainer = document.getElementById('table-container');
+    const filterSection = document.getElementById('filter-section');
+    const selectDia = document.getElementById('selectDia');
+    const selectTurno = document.getElementById('selectTurno');
+    const whatsappBoxTop = document.getElementById('whatsappBoxTop');
+    const actionButtons = document.getElementById('actionButtons');
+    const btnWhatsAppLink = document.getElementById('btnWhatsAppLink');
+    const btnCopy = document.getElementById('btnCopy');
 
-    async function extrairTextoEIdentificarEstacao(arquivoObj) {
-        try {
-            const texto = await lerArquivoPDF(arquivoObj.file);
-            arquivoObj.texto = texto;
-            let encontrada = "Estação não identificada";
-            for (let estacao of estacoesCPTM) {
-                if (new RegExp(estacao, 'gi').test(texto)) {
-                    encontrada = `Estação: ${estacao}`;
-                    break;
-                }
-            }
-            arquivoObj.estacao = encontrada;
-        } catch (e) { arquivoObj.estacao = "Erro na leitura"; }
-        atualizarListaVisual();
-    }
+    window.addEventListener('beforeunload', () => {
+        fileInput.value = '';
+    });
 
-    function atualizarListaVisual() {
-        const container = document.getElementById('listaArquivosContainer');
-        const listaDiv = document.getElementById('arquivosAdicionados');
-        listaDiv.innerHTML = "";
-        if (listaGlobalArquivos.length > 0) {
-            container.style.display = 'block';
-            listaGlobalArquivos.forEach((item, index) => {
-                listaDiv.innerHTML += `
-                    <div class="file-item">
-                        <div class="file-info"><span>📄 ${item.file.name}</span><span class="file-estacao">📍 ${item.estacao}</span></div>
-                        <button class="btn-remove" onclick="removerArquivo(${index})">Remover</button>
-                    </div>`;
-            });
-        } else { container.style.display = 'none'; }
-    }
-
-    function removerArquivo(index) { listaGlobalArquivos.splice(index, 1); atualizarListaVisual(); }
-
-    function lerArquivoPDF(file) {
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = async function() {
-                const pdf = await pdfjsLib.getDocument(new Uint8Array(this.result)).promise;
-                let texto = "";
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const content = await (await pdf.getPage(i)).getTextContent();
-                    texto += content.items.map(item => item.str).join(" ") + "\n";
-                }
-                resolve(texto);
-            };
-            reader.readAsArrayBuffer(file);
-        });
-    }
-
-    async function processarPDFs() {
-        if (listaGlobalArquivos.length === 0) return alert("Selecione um PDF.");
-        let textoTotal = listaGlobalArquivos.map(i => i.texto).join("\n");
-        gerarMapaForca(textoTotal, document.getElementById('faltosos').value);
-    }
-
-    function gerarMapaForca(textoPDF, textoFaltas) {
-        let horarioExtraido = "das 07h às 15h";
+    fileInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
         
-        let textoLimpo = textoPDF.replace(/\s+/g, ' ');
-
-        if (/07[:\.h]00|07:0|07h/i.test(textoLimpo) && !(/15[:\.h]00|15:0|15h/i.test(textoLimpo.substring(0, textoLimpo.indexOf("07"))))) {
-            horarioExtraido = "das 07h às 15h";
-        } else if (/15[:\.h]00|15:0|15h/i.test(textoLimpo)) {
-            horarioExtraido = "das 15h às 23h";
+        if (!file) {
+            tableContainer.innerHTML = '<p class="empty-message">Nenhum arquivo selecionado ou dados carregados.</p>';
+            filterSection.style.display = 'none';
+            whatsappBoxTop.style.display = 'none';
+            actionButtons.style.display = 'none';
+            return;
         }
 
-        const listaFaltasBruta = textoFaltas.split(';').map(i => i.trim()).filter(i => i.length > 0);
-        
-        let itensProcessados = new Set();
-        let listaFaltas = [];
-        let itensDuplicados = [];
+        filterSection.style.display = 'flex';
 
-        listaFaltasBruta.forEach(item => {
-            let itemLower = item.toLowerCase();
-            if (itensProcessados.has(itemLower)) {
-                itensDuplicados.push(item);
-            } else {
-                itensProcessados.add(itemLower);
-                listaFaltas.push(item);
-            }
+        const diasUnicos = [...new Set(dadosMesCompleto.map(item => item.dia))];
+        selectDia.innerHTML = '<option value="">Selecione o dia...</option>';
+        diasUnicos.forEach(dia => {
+            const opt = document.createElement('option');
+            opt.value = dia;
+            opt.textContent = `Dia ${dia}`;
+            selectDia.appendChild(opt);
         });
 
-        let detalhesEncontrados = [];
-        let naoEncontrados = [];
-        let faltasValidasContagem = 0;
+        renderizarTabela(dadosMesCompleto);
+    });
 
-        listaFaltas.forEach(itemFalta => {
-            let escapedTerm = itemFalta.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            let regexFalta = new RegExp(escapedTerm, 'gi');
-            let match = regexFalta.exec(textoPDF);
+    function renderizarTabela(dados) {
+        const dadosOrdenados = [...dados].sort((a, b) => a.dia - b.dia);
+
+        let html = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dia</th>
+                        <th>Semana</th>
+                        <th>Estação</th>
+                        <th>AISP</th>
+                        <th>07h às 15h</th>
+                        <th>15h às 23h</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        dadosOrdenados.forEach(item => {
+            html += `
+                <tr>
+                    <td><strong>${item.dia}</strong></td>
+                    <td>${item.semana}</td>
+                    <td>${item.estacao}</td>
+                    <td>${item.aisp}</td>
+                    <td>${item.t07_15}</td>
+                    <td>${item.t15_23}</td>
+                </tr>
+            `;
+        });
+
+        html += `
+                </tbody>
+            </table>
+        `;
+
+        tableContainer.innerHTML = html;
+    }
+
+    function atualizarFiltroRodape() {
+        const diaSelecionado = selectDia.value;
+        const turnoSelecionado = selectTurno.value;
+
+        if (!diaSelecionado || !turnoSelecionado) {
+            whatsappBoxTop.style.display = 'none';
+            actionButtons.style.display = 'none';
+            return; 
+        }
+
+        const dadosFiltrados = dadosMesCompleto.filter(item => item.dia == diaSelecionado);
+
+        let html = `
+            <h3>Escala para o Dia ${diaSelecionado} (${dadosFiltrados[0] ? dadosFiltrados[0].semana : ''}) - Turno: ${turnoSelecionado === 't07_15' ? '07h às 15h' : '15h às 23h'}</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dia</th>
+                        <th>Semana</th>
+                        <th>Estação</th>
+                        <th>AISP</th>
+                        <th>${turnoSelecionado === 't07_15' ? '07h às 15h' : '15h às 23h'}</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        let textoWhatsApp = `Escala - Dia ${diaSelecionado} (${turnoSelecionado === 't07_15' ? '07h às 15h' : '15h às 23h'}):\n\n`;
+
+        dadosFiltrados.forEach((item, index) => {
+            const idEscala = item[turnoSelecionado];
+            html += `
+                <tr>
+                    <td><strong>${item.dia}</strong></td>
+                    <td>${item.semana}</td>
+                    <td>${item.estacao}</td>
+                    <td>${item.aisp}</td>
+                    <td><strong>${idEscala}</strong></td>
+                </tr>
+            `;
             
-            if (match) {
-                faltasValidasContagem++;
-                let indiceInicio = match.index;
-                
-                let inicioJanela = Math.max(0, indiceInicio - 60);
-                let trechoAnterior = textoPDF.substring(inicioJanela, indiceInicio);
-                
-                let regexPosto = /\b(([1-3])[º°.]?\s*(SARGENTO|SGT)|CORONEL|TENENTE[- ]CORONEL|MAJOR|CAPITAO|CAP|1[ºo]?[- ]TENENTE|2[ºo]?[- ]TENENTE|ASPIRANTE|SUB[- ]TENENTE|SUBTENENTE|ST|CABO|CB|SOLDADO|SD)\b/gi;
-                
-                let correspondenciasPosto = [...trechoAnterior.matchAll(regexPosto)];
-                let postoEncontrado = "";
-                
-                if (correspondenciasPosto.length > 0) {
-                    let ultimoMatch = correspondenciasPosto[correspondenciasPosto.length - 1];
-                    let textoPosto = ultimoMatch[0];
-                    let numeroSgt = ultimoMatch[2];
-                    
-                    if (/SARGENTO|SGT/i.test(textoPosto) && numeroSgt) {
-                        postoEncontrado = `${numeroSgt}º Sgt`;
-                    } else if (/SARGENTO|SGT/i.test(textoPosto)) {
-                        postoEncontrado = "Sgt";
-                    } else {
-                        postoEncontrado = textoPosto;
-                    }
-                }
-                
-                let fimJanela = indiceInicio + itemFalta.length + 120;
-                let trechoPosterior = textoPDF.substring(indiceInicio, fimJanela).replace(/\s+/g, ' ');
-                
-                let regexUnidade = /\b(\d+[º°]?\s*BPM\/[I|M]?[\-\d]*|CPA\/M[\-\d]*|\d+[ªªªa]?\s*CIA[\/\d]*|BATALHAO)\b/gi;
-                let matchUnidade = trechoPosterior.match(regexUnidade);
-                let unidadeEncontrada = matchUnidade ? matchUnidade[0] : "";
-                
-                let linhaTemp = postoEncontrado ? `${postoEncontrado} ${trechoPosterior}` : trechoPosterior;
-                if (unidadeEncontrada && !linhaTemp.includes(unidadeEncontrada)) {
-                    linhaTemp = linhaTemp.replace(itemFalta, `${itemFalta} - ${unidadeEncontrada}`);
-                }
-                
-                let regexHora = /\b([0-2]?[0-9][:hH][0-5][0-9]|[0-2]?[0-9]h)\b/;
-                let matchHora = linhaTemp.match(regexHora);
-                
-                let linhaFinal = linhaTemp;
-                if (matchHora) {
-                    let indiceHora = linhaTemp.indexOf(matchHora[0]);
-                    linhaFinal = linhaTemp.substring(0, indiceHora).trim();
-                }
-                
-                detalhesEncontrados.push(linhaFinal.trim());
-            } else {
-                naoEncontrados.push(itemFalta);
+            textoWhatsApp += `https://sistemasadmin.intranet.policiamilitar.sp.gov.br/escala/arrelpreesc.aspx?${idEscala}\n🚆 ${item.estacao}`;
+            
+            if (index < dadosFiltrados.length - 1) {
+                textoWhatsApp += `\n\n`;
             }
         });
 
-        let resultadoEstacoes = "";
-        let totalGeralPMs = 0;
+        html += `
+                </tbody>
+            </table>
+        `;
 
-        estacoesCPTM.forEach(estacao => {
-            let tem = new RegExp(estacao, 'gi').test(textoPDF);
-            let qtdPMsEstacao = 0;
-            if (tem) {
-                let ocorrenciasEstacao = listaGlobalArquivos.filter(item => new RegExp(estacao, 'gi').test(item.texto)).length;
-                qtdPMsEstacao = estacao.includes("Ribeirão Pires") ? (ocorrenciasEstacao * 1) : (ocorrenciasEstacao * 2);
-            }
-            totalGeralPMs += qtdPMsEstacao;
-            if (estacao.includes("Ribeirão Pires")) {
-                resultadoEstacoes += `🚄 ${estacao}: ${String(qtdPMsEstacao).padStart(2, '0')} PM\n`;
-            } else {
-                resultadoEstacoes += `🚄 ${estacao}: ${String(qtdPMsEstacao).padStart(2, '0')} PMs\n`;
-            }
-        });
+        tableContainer.innerHTML = html;
 
-        let temSarg = /\b([1-3]\.\s*SARGENTO|SARGENTO|SUB\s*TENENTE|1\.?\s*SGT|2\.?\s*SGT|3\.?\s*SGT|SUB\s*TEN|ST)\b/gi.test(textoPDF);
-        let totalSgtSub = temSarg ? 1 : 0;
-        if (listaGlobalArquivos.length > 1) {
-            totalSgtSub = listaGlobalArquivos.filter(item => /\b([1-3]\.\s*SARGENTO|SARGENTO|SUB\s*TENENTE|1\.?\s*SGT|2\.?\s*SGT|3\.?\s*SGT|SUB\s*TEN|ST)\b/gi.test(item.texto)).length;
-        }
-
-        let totalCbSd = totalGeralPMs > totalSgtSub ? totalGeralPMs - totalSgtSub : 0;
-        let totalFinalCbSd = (totalCbSd - faltasValidasContagem) < 0 ? 0 : (totalCbSd - faltasValidasContagem);
-        let totalGeralFinal = totalSgtSub + totalFinalCbSd;
-
-        const hoje = new Date();
-        const mesStr = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"][hoje.getMonth()];
-        const anoStr = String(hoje.getFullYear()).slice(-2);
-        const dataFormatada = `${String(hoje.getDate()).padStart(2, '0')}${mesStr}${anoStr}`;
-
-        const horaAtual = hoje.getHours();
-        let saudacao = "Bom dia";
-        if (horaAtual >= 12 && horaAtual < 18) {
-            saudacao = "Boa tarde";
-        } else if (horaAtual >= 18) {
-            saudacao = "Boa noite";
-        }
-
-        let textoFinal = `MAPA FORÇA - DEJEM CPTM - CPA/M-6\n`;
-        textoFinal += `DATA: ${dataFormatada}\n`;
-        textoFinal += `HORÁRIO: ${horarioExtraido}\n\n`; 
-        textoFinal += resultadoEstacoes + `\n`;
-        textoFinal += `Sgt/Sub: ${String(totalSgtSub).padStart(2, '0')}\n`;
-        textoFinal += `Cb/Sd: ${String(totalFinalCbSd).padStart(2, '0')}\n`;
-        textoFinal += `Faltas: ${String(faltasValidasContagem).padStart(2, '0')}\n`;
-        textoFinal += `Total: ${totalGeralFinal}\n`;
-        textoFinal += `Mapa Força: \n`;
-        textoFinal += `Resultado: \n\n`;
-
-        if (detalhesEncontrados.length > 0) {
-            textoFinal += `✅ Novidades detectadas:\n${[...new Set(detalhesEncontrados)].join('\n')}\n\n`;
-        }
-
-        if (naoEncontrados.length > 0) {
-            textoFinal += `⚠️ Aviso: Não encontrado nas escalas:\n${naoEncontrados.join('; ')}\n\n`;
-        }
-
-        if (itensDuplicados.length > 0) {
-            textoFinal += `🔄 Aviso: Dados duplicados ignorados na contagem:\n${[...new Set(itensDuplicados)].join('; ')}\n\n`;
-        }
-
-        textoFinal += `Por gentileza, não esqueçam de enviar a escala via link disponível no grupo e assinar o livro em suas respectivas estações.\n\n`;
-        textoFinal += `${saudacao} e bom serviço a todos.`;
-
-        const textareaResultado = document.getElementById('resultado');
-        textareaResultado.style.display = 'block';
-        textareaResultado.value = textoFinal;
+        whatsappBoxTop.style.display = 'block';
+        whatsappBoxTop.textContent = textoWhatsApp;
         
-        salvarResultado(textoFinal);
-
-        document.getElementById('btnCopiar').style.display = 'flex';
-        document.getElementById('btnWhatsapp').style.display = 'flex';
+        actionButtons.style.display = 'flex';
+        btnWhatsAppLink.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(textoWhatsApp)}`;
     }
 
-    function copiarTexto() {
-        const textareaResultado = document.getElementById('resultado');
-        textareaResultado.select();
-        textareaResultado.setSelectionRange(0, textareaResultado.value.length);
+    // Funcionalidade robusta do botão Copiar Texto (Compatível com WebViews e Dispositivos Móveis)
+    btnCopy.addEventListener('click', function() {
+        const textoParaCopiar = whatsappBoxTop.textContent;
         
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(textareaResultado.value).then(() => {
-                alert("Mapa Força copiado com sucesso!");
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(textoParaCopiar).then(() => {
+                mostrarSucessoCopia();
             }).catch(() => {
-                realizarCopiaAlternativa(textareaResultado);
+                executarCopiaAlternativa(textoParaCopiar);
             });
         } else {
-            realizarCopiaAlternativa(textareaResultado);
+            executarCopiaAlternativa(textoParaCopiar);
         }
-    }
+    });
 
-    function abrirWhatsApp() {
-        const textareaResultado = document.getElementById('resultado');
-        const textoCodificado = encodeURIComponent(textareaResultado.value);
-        window.open(`https://wa.me/?text=${textoCodificado}`, '_blank');
-    }
-
-    function realizarCopiaAlternativa(elemento) {
+    function executarCopiaAlternativa(texto) {
+        const textarea = document.createElement('textarea');
+        textarea.value = texto;
+        textarea.style.position = 'fixed'; // Evita rolagem da página
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        
         try {
             const sucesso = document.execCommand('copy');
             if (sucesso) {
-                alert("Mapa Força copiado com sucesso!");
+                mostrarSucessoCopia();
             } else {
-                alert("Texto selecionado. Toque em 'Copiar' se necessário.");
+                alert('Não foi possível copiar o texto automaticamente.');
             }
         } catch (err) {
-            alert("Erro ao copiar. O texto está selecionado para cópia manual.");
+            alert('Erro ao copiar texto: ' + err);
         }
+        
+        document.body.removeChild(textarea);
     }
+
+    function mostrarSucessoCopia() {
+        btnCopy.textContent = '✅ Copiado!';
+        setTimeout(() => {
+            btnCopy.textContent = '📋 Copiar Texto';
+        }, 2000);
+    }
+
+    selectDia.addEventListener('change', atualizarFiltroRodape);
+    selectTurno.addEventListener('change', atualizarFiltroRodape);
 </script>
+
 </body>
 </html>
