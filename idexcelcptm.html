@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distribuição de Estações - CPTM</title>
+    <!-- Incluindo SheetJS para leitura de arquivos XLS/XLSX -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        h1 {
+            color: #0056b3;
+            font-size: 22px;
+        }
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #0056b3;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .empty-message {
+            text-align: center;
+            color: #777;
+            font-style: italic;
+            padding: 20px;
+        }
+        .top-filter {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #eef2f7;
+            border-radius: 6px;
+            border: 1px solid #d1d9e0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            display: none;
+        }
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .top-filter label {
+            font-weight: bold;
+        }
+        .top-filter select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        .whatsapp-output-top {
+            background-color: #f9f9f9;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            display: none;
+            font-size: 13px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .btn-whatsapp {
+            background-color: #25D366;
+        }
+        .btn-whatsapp:hover {
+            background-color: #1ebe57;
+        }
+        .btn-copy {
+            background-color: #0056b3;
+        }
+        .btn-copy:hover {
+            background-color: #004494;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Distribuição de Estações por Dia - CPTM</h1>
+    <p>Selecione o arquivo Excel (.xls ou .xlsx) correspondente para carregar e ordenar todos os dias do mês:</p>
+    
+    <div class="input-group">
+        <input type="file" id="excelFile" accept=".xls, .xlsx, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+        
+        <div class="top-filter" id="filter-section">
+            <div class="filter-controls">
+                <div>
+                    <label for="selectDia">Escolher Dia:</label>
+                    <select id="selectDia">
+                        <option value="">Selecione o dia...</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="selectTurno">Escolher Horário (Turno):</label>
+                    <select id="selectTurno">
+                        <option value="">Selecione o turno...</option>
+                        <option value="07h às 15h">07h às 15h</option>
+                        <option value="15h às 23h">15h às 23h</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="whatsappBoxTop" class="whatsapp-output-top"></div>
+        
+        <div id="actionButtons" class="action-buttons">
+            <a id="btnWhatsAppLink" href="#" target="_blank" class="btn btn-whatsapp">
+                💬 Enviar para o WhatsApp
+            </a>
+            <button id="btnCopy" class="btn btn-copy">
+                📋 Copiar Texto
+            </button>
+        </div>
+    </div>
+
+    <div id="table-container">
+        <p class="empty-message">Nenhum arquivo selecionado ou dados carregados.</p>
+    </div>
+</div>
+
+<script>
+    let dadosMesCompleto = [];
+
+    const fileInput = document.getElementById('excelFile');
+    const tableContainer = document.getElementById('table-container');
+    const filterSection = document.getElementById('filter-section');
+    const selectDia = document.getElementById('selectDia');
+    const selectTurno = document.getElementById('selectTurno');
+    const whatsappBoxTop = document.getElementById('whatsappBoxTop');
+    const actionButtons = document.getElementById('actionButtons');
+    const btnWhatsAppLink = document.getElementById('btnWhatsAppLink');
+    const btnCopy = document.getElementById('btnCopy');
+
+    window.addEventListener('beforeunload', () => {
+        fileInput.value = '';
+    });
+
+    fileInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        
+        if (!file) {
+            tableContainer.innerHTML = '<p class="empty-message">Nenhum arquivo selecionado ou dados carregados.</p>';
+            filterSection.style.display = 'none';
+            whatsappBoxTop.style.display = 'none';
+            actionButtons.style.display = 'none';
+            dadosMesCompleto = [];
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = e.target.result;
+                const workbook = XLSX.read(data, { type: 'binary' });
+                
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+                
+                if (!rows || rows.length === 0) {
+                    tableContainer.innerHTML = '<p class="empty-message" style="color: red;">A planilha está vazia.</p>';
+                    return;
+                }
+
+                dadosMesCompleto = [];
+                let currentStation = "";
+                let i = 0;
+
+                // Varre a planilha identificando os blocos de calendário por semana
+                while (i < rows.length) {
+                    let row = rows[i];
+                    let val2 = Number(row[2]);
+                    
+                    // Se encontrou uma linha com número de dia na coluna 2 (ex: 10, 17, 24, 31)
+                    if (!isNaN(val2) && val2 >= 1 && val2 <= 31) {
+                        let days = [];
+                        for (let c = 2; c <= 8; c++) {
+                            days.push(rows[i][c]);
+                        }
+                        let weekdays = [];
+                        if (i + 1 < rows.length) {
+                            for (let c = 2; c <= 8; c++) {
+                                weekdays.push(rows[i+1][c]);
+                            }
+                        }
+                        
+                        let j = i + 2;
+                        while (j < rows.length) {
+                            let sRow = rows[j];
+                            let sVal2 = Number(sRow[2]);
+                            if (!isNaN(sVal2) && sVal2 >= 1 && sVal2 <= 31) {
+                                break; // Chegou no próximo bloco de semana
+                            }
+                            
+                            let col0 = String(sRow[0] || "").trim();
+                            let col1 = String(sRow[1] || "").trim();
+                            
+                            if (col0 && col0 !== 'AISP' && !col0.includes('DISTRIBUIÇÃO')) {
+                                currentStation = col0;
+                            }
+                            
+                            if (col1 === '07h às 15h' || col1 === '15h às 23h') {
+                                let turno = col1;
+                                for (let idx = 0; idx < days.length; idx++) {
+                                    let dVal = days[idx];
+                                    if (dVal !== "" && !isNaN(Number(dVal))) {
+                                        let dayNum = Number(dVal);
+                                        let weekday = weekdays[idx] || "";
+                                        let stationId = sRow[2 + idx];
+                                        if (stationId !== "" && stationId !== undefined && stationId !== null) {
+                                            dadosMesCompleto.push({
+                                                dia: dayNum,
+                                                semana: String(weekday).trim(),
+                                                estacao: currentStation,
+                                                turno: turno,
+                                                id: String(stationId).trim()
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                            j++;
+                        }
+                        i = j;
+                    } else {
+                        i++;
+                    }
+                }
+
+                if (dadosMesCompleto.length === 0) {
+                    tableContainer.innerHTML = '<p class="empty-message" style="color: red;">Não foi possível extrair os dados estruturados da planilha.</p>';
+                    filterSection.style.display = 'none';
+                    return;
+                }
+
+                filterSection.style.display = 'flex';
+
+                const diasUnicos = [...new Set(dadosMesCompleto.map(item => item.dia))].sort((a,b) => a - b);
+                selectDia.innerHTML = '<option value="">Selecione o dia...</option>';
+                diasUnicos.forEach(dia => {
+                    const opt = document.createElement('option');
+                    opt.value = dia;
+                    opt.textContent = `Dia ${dia}`;
+                    selectDia.appendChild(opt);
+                });
+
+                selectTurno.value = "";
+                whatsappBoxTop.style.display = 'none';
+                actionButtons.style.display = 'none';
+
+                renderizarTabelaGeral(dadosMesCompleto);
+            } catch (error) {
+                console.error("Erro ao ler o arquivo Excel:", error);
+                alert("Erro ao processar o arquivo Excel: " + error.message);
+            }
+        };
+
+        if (reader.readAsBinaryString) {
+            reader.readAsBinaryString(file);
+        } else {
+            reader.readAsArrayBuffer(file);
+        }
+    });
+
+    function renderizarTabelaGeral(dados) {
+        const dadosOrdenados = [...dados].sort((a, b) => a.dia - b.dia);
+
+        let html = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dia</th>
+                        <th>Semana</th>
+                        <th>Estação</th>
+                        <th>Turno</th>
+                        <th>ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        dadosOrdenados.slice(0, 100).forEach(item => {
+            html += `
+                <tr>
+                    <td><strong>${item.dia}</strong></td>
+                    <td>${item.semana}</td>
+                    <td>${item.estacao.replace('\n', ' - ')}</td>
+                    <td>${item.turno}</td>
+                    <td><strong>${item.id}</strong></td>
+                </tr>
+            `;
+        });
+
+        html += `
+                </tbody>
+            </table>
+            <p style="text-align: center; color: #666; font-size: 13px; margin-top: 10px;">Mostrando primeiros registros carregados. Selecione um Dia e Turno acima para detalhar e gerar a mensagem do WhatsApp.</p>
+        `;
+
+        tableContainer.innerHTML = html;
+    }
+
+    function atualizarFiltro() {
+        const diaSelecionado = selectDia.value;
+        const turnoSelecionado = selectTurno.value;
+
+        if (!diaSelecionado || !turnoSelecionado) {
+            whatsappBoxTop.style.display = 'none';
+            actionButtons.style.display = 'none';
+            if (diaSelecionado) {
+                const dadosFiltradosDia = dadosMesCompleto.filter(item => item.dia == diaSelecionado);
+                renderizarTabelaParcial(dadosFiltradosDia);
+            } else {
+                renderizarTabelaGeral(dadosMesCompleto);
+            }
+            return; 
+        }
+
+        const dadosFiltrados = dadosMesCompleto.filter(
+            item => item.dia == diaSelecionado && item.turno === turnoSelecionado
+        );
+
+        if (dadosFiltrados.length === 0) {
+            tableContainer.innerHTML = '<p class="empty-message">Nenhum registro encontrado para esta combinação.</p>';
+            whatsappBoxTop.style.display = 'none';
+            actionButtons.style.display = 'none';
+            return;
+        }
+
+        let semanaNome = dadosFiltrados[0] ? dadosFiltrados[0].semana : '';
+
+        let html = `
+            <h3>Escala para o Dia ${diaSelecionado} (${semanaNome}) - Turno: ${turnoSelecionado}</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Estação / AISP</th>
+                        <th>Turno</th>
+                        <th>ID / Link</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        let textoWhatsApp = `Escala - Dia ${diaSelecionado} (${semanaNome}) - Turno ${turnoSelecionado}:\n\n`;
+
+        dadosFiltrados.forEach((item, index) => {
+            html += `
+                <tr>
+                    <td><strong>${item.estacao.replace('\n', ' - ')}</strong></td>
+                    <td>${item.turno}</td>
+                    <td><a href="https://sistemasadmin.intranet.policiamilitar.sp.gov.br/escala/arrelpreesc.aspx?${item.id}" target="_blank">${item.id}</a></td>
+                </tr>
+            `;
+            
+            textoWhatsApp += `https://sistemasadmin.intranet.policiamilitar.sp.gov.br/escala/arrelpreesc.aspx?${item.id}\n🚆 ${item.estacao.replace('\n', ' - ')}`;
+            
+            if (index < dadosFiltrados.length - 1) {
+                textoWhatsApp += `\n\n`;
+            }
+        });
+
+        html += `
+                </tbody>
+            </table>
+        `;
+
+        tableContainer.innerHTML = html;
+
+        whatsappBoxTop.style.display = 'block';
+        whatsappBoxTop.textContent = textoWhatsApp;
+        
+        actionButtons.style.display = 'flex';
+        btnWhatsAppLink.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(textoWhatsApp)}`;
+    }
+
+    function renderizarTabelaParcial(dados) {
+        let html = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dia</th>
+                        <th>Semana</th>
+                        <th>Estação</th>
+                        <th>Turno</th>
+                        <th>ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        dados.forEach(item => {
+            html += `
+                <tr>
+                    <td><strong>${item.dia}</strong></td>
+                    <td>${item.semana}</td>
+                    <td>${item.estacao.replace('\n', ' - ')}</td>
+                    <td>${item.turno}</td>
+                    <td><strong>${item.id}</strong></td>
+                </tr>
+            `;
+        });
+
+        html += `
+                </tbody>
+            </table>
+        `;
+
+        tableContainer.innerHTML = html;
+    }
+
+    btnCopy.addEventListener('click', function() {
+        const textoParaCopiar = whatsappBoxTop.textContent;
+        
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(textoParaCopiar).then(() => {
+                mostrarSucessoCopia();
+            }).catch(() => {
+                executarCopiaAlternativa(textoParaCopiar);
+            });
+        } else {
+            executarCopiaAlternativa(textoParaCopiar);
+        }
+    });
+
+    function executarCopiaAlternativa(texto) {
+        const textarea = document.createElement('textarea');
+        textarea.value = texto;
+        textarea.style.position = 'fixed';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        
+        try {
+            const sucesso = document.execCommand('copy');
+            if (sucesso) {
+                mostrarSucessoCopia();
+            } else {
+                alert('Não foi possível copiar o texto automaticamente.');
+            }
+        } catch (err) {
+            alert('Erro ao copiar texto: ' + err);
+        }
+        
+        document.body.removeChild(textarea);
+    }
+
+    function mostrarSucessoCopia() {
+        btnCopy.textContent = '✅ Copiado!';
+        setTimeout(() => {
+            btnCopy.textContent = '📋 Copiar Texto';
+        }, 2000);
+    }
+
+    selectDia.addEventListener('change', atualizarFiltro);
+    selectTurno.addEventListener('change', atualizarFiltro);
+</script>
+
+</body>
+</html>
