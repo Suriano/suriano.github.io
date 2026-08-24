@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor PDF para HTML com Python</title>
+    
+    <!-- Carrega o ambiente PyScript para rodar Python no navegador -->
+    <link rel="stylesheet" href="https://pyscript.net">
+    <script type="module" src="https://pyscript.net"></script>
+</head>
+<body>
+
+    <h2>Conversor de PDF para Texto (Python no Navegador)</h2>
+    
+    <!-- Input para o usuário fazer upload do PDF -->
+    <input type="file" id="pdf-file" accept=".pdf">
+    
+    <!-- Área onde o texto do PDF será exibido -->
+    <div id="output" style="margin-top: 20px; white-space: pre-wrap; border: 1px solid #ccc; padding: 10px;">
+        O texto extraído aparecerá aqui...
+    </div>
+
+    <!-- Configuração do PyScript: Instala a biblioteca pypdf -->
+    <py-config>
+        packages = ["pypdf"]
+    </py-config>
+
+    <!-- Código Python executado diretamente no navegador -->
+    <script type="py">
+        import io
+        from pypdf import PdfReader
+        from pyscript import document, window
+        from pyodide.ffi import create_proxy
+
+        async def process_file(event):
+            # Obtém o arquivo selecionado pelo usuário
+            file_list = event.target.files
+            if not file_list:
+                return
+            
+            file = file_list.item(0)
+            
+            # Lê os bytes do arquivo de forma assíncrona
+            array_buffer = await file.arrayBuffer()
+            file_bytes = array_buffer.to_py()
+            
+            # Carrega o PDF na memória usando bytes e extrai o texto
+            pdf_file = io.BytesIO(file_bytes)
+            reader = PdfReader(pdf_file)
+            
+            full_text = ""
+            for page in reader.pages:
+                full_text += page.extract_text() + "\n"
+            
+            # Insere o texto extraído dentro da div HTML
+            output_div = document.getElementById("output")
+            output_div.innerHTML = full_text
+
+        # Vincula o evento de mudança do input de arquivo à função Python
+        upload_element = document.getElementById("pdf-file")
+        upload_element.addEventListener("change", create_proxy(process_file))
+    </script>
+
+</body>
+</html>
