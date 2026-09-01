@@ -159,7 +159,7 @@ app.post('/deletar/:id', async (req, res) => {
 });
 
 // Inicialização do servidor
-const PORT = process.env.PORT || 1000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor rodando com sucesso na porta ${PORT}`);
 });
