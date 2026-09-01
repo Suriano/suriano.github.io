@@ -73,15 +73,16 @@ app.listen(PORT, () => {
 });
 
 */
-
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
+const cors = require('cors'); // <--- 1. Importe o cors
 
 const app = express();
 
-// Configurações essenciais para ler dados enviados por formulários e JSON
+// Configurações essenciais
+app.use(cors()); // <--- 2. Ative o cors para liberar requisições de outras origens (GitHub Pages)
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -98,7 +99,7 @@ const usuarioSchema = new mongoose.Schema({
 
 const Usuario = mongoose.model('Usuario', usuarioSchema);
 
-// Rota para exibir a página HTML principal
+// Rota para exibir a página HTML (caso sirva localmente)
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -114,7 +115,7 @@ app.get('/usuarios', async (req, res) => {
   }
 });
 
-// 2. READ (Individual): Rota para buscar um usuário específico por ID (para edição)
+// 2. READ (Individual): Rota para buscar um usuário específico por ID
 app.get('/usuario/:id', async (req, res) => {
   try {
     const usuario = await Usuario.findById(req.params.id);
@@ -126,21 +127,20 @@ app.get('/usuario/:id', async (req, res) => {
   }
 });
 
-// 3. CREATE / UPDATE: Rota unificada para cadastrar ou atualizar (se vier um ID)
+// 3. CREATE / UPDATE: Rota unificada para cadastrar ou atualizar
 app.post('/salvar', async (req, res) => {
   try {
     const { id, nome, senha } = req.body;
 
     if (id) {
-      // UPDATE: Se o ID foi enviado, atualiza o registro existente
       await Usuario.findByIdAndUpdate(id, { nome, senha });
     } else {
-      // CREATE: Se não tem ID, cria um novo usuário
       const novoUsuario = new Usuario({ nome, senha });
       await novoUsuario.save();
     }
 
-    res.redirect('/');
+    // Como o front está no GitHub Pages, podemos redirecionar de volta para a URL do GitHub Pages
+    res.redirect('https://suriano.github.io/'); 
   } catch (error) {
     console.error(error);
     res.status(500).send('Erro ao salvar o usuário no banco de dados.');
@@ -148,22 +148,17 @@ app.post('/salvar', async (req, res) => {
 });
 
 // 4. DELETE: Rota para excluir um usuário por ID
-app.post('/deletar/:id', async (resId, res) => { // Ajustado para rota POST de exclusão simples via formulário/fetch
-  // Nota: Express recebe req, res. Vamos corrigir a ordem dos parâmetros abaixo:
-});
-
-// Rota DELETE corrigida:
 app.post('/deletar/:id', async (req, res) => {
   try {
     await Usuario.findByIdAndDelete(req.params.id);
-    res.redirect('/');
+    res.redirect('https://suriano.github.io/');
   } catch (error) {
     console.error(error);
     res.status(500).send('Erro ao deletar o usuário.');
   }
 });
 
-// Inicialização do servidor na porta definida
+// Inicialização do servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor rodando com sucesso na porta ${PORT}`);
