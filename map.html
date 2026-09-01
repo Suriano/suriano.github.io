@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rota de Bicicleta com Geoapify</title>
+    
+    <!-- Importa o CSS do Leaflet (usado para exibir o mapa) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { height: 100vh; width: 100vw; }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <!-- Importa o JavaScript do Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // 1. Cole sua API Key do Geoapify aqui
+        const apiKey = 'daca396975f54c2d95e7c4c7d25e86ec';
+
+        // 2. Inicializa o mapa centralizado em São Paulo [Latitude, Longitude]
+        const map = L.map('map').setView([-23.550520, -46.633308], 13);
+
+        // 3. Adiciona a camada visual do mapa fornecida pelo Geoapify
+        L.tileLayer(`https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${apiKey}`, {
+            maxZoom: 20,
+            attribution: 'Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | <a href="https://openmaptiles.org/" target="_blank">&copy; OpenMapTiles</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'
+        }).addTo(map);
+
+        // Coordenadas de Teste [Latitude, Longitude]
+        // Exemplo: Partida na Praça da Sé e Chegada na Av. Paulista
+        const origem = [-23.550520, -46.633308]; 
+        const destino = [-23.561414, -46.655881]; 
+
+        // Adiciona marcadores de início e fim no mapa
+        L.marker(origem).addTo(map).bindPopup('Ponto de Partida');
+        L.marker(destino).addTo(map).bindPopup('Ponto de Chegada');
+
+        // 4. Função para calcular e desenhar a rota de bicicleta usando a API Routing do Geoapify
+        async function obterRotaBicicleta() {
+            // O modo de transporte para bicicleta no Geoapify é 'bicycle'
+            // O formato de coordenadas na URL do Geoapify é: latitude,longitude|latitude,longitude
+            const url = `https://api.geoapify.com/v1/routing?waypoints=${origem[0]},${origem[1]}|${destino[0]},${destino[1]}&mode=bicycle&apiKey=${apiKey}`;
+
+            try {
+                const resposta = await fetch(url);
+                const dados = await resposta.json();
+
+                if (dados.features && dados.features.length > 0) {
+                    // O Geoapify retorna o trajeto em formato GeoJSON
+                    const geometriaRota = dados.features[0];
+
+                    // Adiciona a linha da rota ao mapa usando a camada GeoJSON do Leaflet
+                    const camadaRota = L.geoJSON(geometriaRota, {
+                        style: {
+                            color: '#007bff', // Cor azul para a rota
+                            weight: 5,
+                            opacity: 0.8
+                        }
+                    }).addTo(map);
+
+                    // Ajusta o zoom do mapa automaticamente para abranger toda a rota
+                    map.fitBounds(camadaRota.getBounds());
+                }
+            } catch (erro) {
+                console.error("Erro ao buscar rota de bicicleta:", erro);
+            }
+        }
+
+        // Executa a função de roteamento
+        obterRotaBicicleta();
+    </script>
+
+</body>
+</html>
