@@ -30,11 +30,10 @@
 <body>
 
     <div class="container">
-        <!-- Formulário Dinâmico (Create / Update) -->
-        <form id="form-usuario" action="/salvar" method="POST">
+        <!-- Formulário apontando para a URL completa do Render -->
+        <form id="form-usuario" action="https://suriano-github-io.onrender.com/salvar" method="POST">
             <h2 id="titulo-form">Cadastrar Usuário</h2>
             
-            <!-- Campo oculto para armazenar o ID quando for edição -->
             <input type="hidden" id="usuario-id" name="id">
 
             <label for="nome">Nome:</label>
@@ -47,7 +46,7 @@
             <button type="button" id="btn-cancelar" class="btn-cancelar" onclick="limparFormulario()">Cancelar Edição</button>
         </form>
 
-        <!-- Área da Listagem (Read / Update / Delete) -->
+        <!-- Área da Listagem -->
         <div class="list-container">
             <h2>Usuários Cadastrados</h2>
             <table>
@@ -65,10 +64,13 @@
     </div>
 
     <script>
+        // URL base do seu backend no Render
+        const API_URL = 'https://suriano-github-io.onrender.com';
+
         // Função para buscar os dados do servidor e preencher a tabela (READ)
         async function carregarUsuarios() {
             try {
-                const resposta = await fetch('/usuarios');
+                const resposta = await fetch(`${API_URL}/usuarios`);
                 const usuarios = await resposta.json();
                 
                 const tabelaElemento = document.getElementById('tabela-usuarios');
@@ -84,8 +86,8 @@
                     tr.innerHTML = `
                         <td>${user.nome}</td>
                         <td class="acoes">
-                            <button class="btn-editar" onclick="prepararEdicao('${user._id}', '${user.nome}')">Editar</button>
-                            <form action="/deletar/${user._id}" method="POST" style="display:inline; margin:0; padding:0; background:none; box-shadow:none; width:auto;">
+                            <button type="button" class="btn-editar" onclick="prepararEdicao('${user._id}', '${user.nome}')">Editar</button>
+                            <form action="${API_URL}/deletar/${user._id}" method="POST" style="display:inline; margin:0; padding:0; background:none; box-shadow:none; width:auto;">
                                 <button type="submit" class="btn-deletar" onclick="return confirm('Deseja realmente excluir?')">Excluir</button>
                             </form>
                         </td>
@@ -94,15 +96,15 @@
                 });
             } catch (error) {
                 console.error('Erro ao carregar usuários:', error);
-                document.getElementById('tabela-usuarios').innerHTML = '<tr><td colspan="2">Erro ao carregar dados.</td></tr>';
+                document.getElementById('tabela-usuarios').innerHTML = '<tr><td colspan="2">Erro ao carregar dados. Verifique a conexão.</td></tr>';
             }
         }
 
-        // Preenche o formulário com os dados para edição (UPDATE)
+        // Preenche o formulário para edição (UPDATE)
         async function prepararEdicao(id, nomeAtual) {
             document.getElementById('usuario-id').value = id;
             document.getElementById('nome').value = nomeAtual;
-            document.getElementById('senha').value = ''; // Senha em branco por segurança
+            document.getElementById('senha').value = '';
             document.getElementById('senha').placeholder = 'Digite nova senha (ou mantenha)';
             
             document.getElementById('titulo-form').textContent = 'Editar Usuário';
