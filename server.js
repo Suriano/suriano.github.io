@@ -23,10 +23,6 @@ const path = require('path');
 
 const app = express();
 
-const cors = require('cors');
-app.use(cors()); // Instale executando 'npm install cors' se necessário
-
-
 
 // Configurações essenciais para ler dados enviados por formulários HTML
 app.use(express.urlencoded({ extended: true }));
