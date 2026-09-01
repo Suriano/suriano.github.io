@@ -3,47 +3,249 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRUD de Usuários</title>
+    <title>Gerenciamento de Usuários - Suriano.dev</title>
+    <!-- Importação de fonte moderna -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; background-color: #f4f4f9; margin: 0; padding: 20px; box-sizing: border-box; }
-        .container { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 900px; }
-        
-        form { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 300px; display: flex; flex-direction: column; height: fit-content; }
-        input { margin-bottom: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
-        
-        button { padding: 10px; background-color: #00684a; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        button:hover { background-color: #004d36; }
-        .btn-cancelar { background-color: #6c757d; margin-top: 5px; display: none; }
-        .btn-cancelar:hover { background-color: #5a6268; }
+        :root {
+            --primary: #059669;
+            --primary-hover: #047857;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
 
-        .list-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; min-width: 320px; max-height: 500px; overflow-y: auto; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        header {
+            margin-bottom: 25px;
+            text-align: center;
+            width: 100%;
+            max-width: 950px;
+        }
+
+        /* Estilo para a imagem no topo */
+        .banner-topo {
+            width: 100%;
+            max-height: 220px;
+            object-fit: cover;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            display: block;
+        }
+
+        .container {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 950px;
+        }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; }
-        th { background-color: #00684a; color: white; }
+        .card {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 340px;
+            box-sizing: border-box;
+            height: fit-content;
+        }
+
+        .card h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--text-main);
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            margin-bottom: 16px;
+            padding: 12px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            background-color: #f8fafc;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+        }
         
-        .acoes { display: flex; gap: 5px; }
-        .btn-editar { background-color: #ffc107; color: black; padding: 5px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
-        .btn-deletar { background-color: #dc3545; color: white; padding: 5px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-cancelar {
+            background-color: #64748b;
+            margin-top: 8px;
+            display: none;
+        }
+        
+        .btn-cancelar:hover {
+            background-color: #475569;
+        }
+
+        .list-container {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border-color);
+            flex: 1;
+            min-width: 320px;
+            max-height: 520px;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+
+        .list-container h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 16px;
+            color: var(--text-main);
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+        
+        .acoes {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-end;
+        }
+
+        .btn-editar, .btn-deletar {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            width: auto;
+            transition: opacity 0.2s;
+        }
+
+        .btn-editar {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+        .btn-editar:hover {
+            opacity: 0.8;
+            background-color: #fef3c7;
+        }
+
+        .btn-deletar {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+        .btn-deletar:hover {
+            opacity: 0.8;
+            background-color: #fee2e2;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 20px 0;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
 
+    <header>
+        <!-- Insira o nome do arquivo da imagem no atributo src -->
+        <img src="banner.jpg" alt="Suriano.dev Banner" class="banner-topo">
+    </header>
+
     <div class="container">
-        <!-- Formulário apontando para a URL completa do Render -->
-        <form id="form-usuario" action="https://suriano-github-io.onrender.com/salvar" method="POST">
-            <h2 id="titulo-form">Cadastrar Usuário</h2>
+        <!-- Formulário Dinâmico -->
+        <form id="form-usuario" class="card" action="https://suriano-github-io.onrender.com/salvar" method="POST">
+            <h2 id="titulo-form">Novo Usuário</h2>
             
             <input type="hidden" id="usuario-id" name="id">
 
-            <label for="nome">Nome:</label>
+            <label for="nome">Nome Completo</label>
             <input type="text" id="nome" name="nome" required placeholder="Digite o nome">
 
-            <label for="senha">Senha:</label>
+            <label for="senha">Senha de Acesso</label>
             <input type="password" id="senha" name="senha" required placeholder="Digite a senha">
 
             <button type="submit" id="btn-salvar">Salvar no Banco</button>
-            <button type="button" id="btn-cancelar" class="btn-cancelar" onclick="limparFormulario()">Cancelar Edição</button>
+            <button type="button" id="btn-cancelar" class="btn-cancelar" onclick="limparFormulario()">Cancelar</button>
         </form>
 
         <!-- Área da Listagem -->
@@ -53,21 +255,19 @@
                 <thead>
                     <tr>
                         <th>Nome</th>
-                        <th>Ações</th>
+                        <th style="text-align: right;">Ações</th>
                     </tr>
                 </thead>
                 <tbody id="tabela-usuarios">
-                    <tr><td colspan="2">Carregando...</td></tr>
+                    <tr><td colspan="2" class="empty-state">Carregando dados...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
     <script>
-        // URL base do seu backend no Render
         const API_URL = 'https://suriano-github-io.onrender.com';
 
-        // Função para buscar os dados do servidor e preencher a tabela (READ)
         async function carregarUsuarios() {
             try {
                 const resposta = await fetch(`${API_URL}/usuarios`);
@@ -77,18 +277,18 @@
                 tabelaElemento.innerHTML = '';
 
                 if (usuarios.length === 0) {
-                    tabelaElemento.innerHTML = '<tr><td colspan="2">Nenhum usuário cadastrado.</td></tr>';
+                    tabelaElemento.innerHTML = '<tr><td colspan="2" class="empty-state">Nenhum usuário cadastrado.</td></tr>';
                     return;
                 }
 
                 usuarios.forEach(user => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td>${user.nome}</td>
+                        <td><strong>${user.nome}</strong></td>
                         <td class="acoes">
                             <button type="button" class="btn-editar" onclick="prepararEdicao('${user._id}', '${user.nome}')">Editar</button>
                             <form action="${API_URL}/deletar/${user._id}" method="POST" style="display:inline; margin:0; padding:0; background:none; box-shadow:none; width:auto;">
-                                <button type="submit" class="btn-deletar" onclick="return confirm('Deseja realmente excluir?')">Excluir</button>
+                                <button type="submit" class="btn-deletar" onclick="return confirm('Deseja realmente excluir este usuário?')">Excluir</button>
                             </form>
                         </td>
                     `;
@@ -96,19 +296,18 @@
                 });
             } catch (error) {
                 console.error('Erro ao carregar usuários:', error);
-                document.getElementById('tabela-usuarios').innerHTML = '<tr><td colspan="2">Erro ao carregar dados. Verifique a conexão.</td></tr>';
+                document.getElementById('tabela-usuarios').innerHTML = '<tr><td colspan="2" class="empty-state" style="color: #dc2626;">Erro ao conectar com o servidor.</td></tr>';
             }
         }
 
-        // Preenche o formulário para edição (UPDATE)
         async function prepararEdicao(id, nomeAtual) {
             document.getElementById('usuario-id').value = id;
             document.getElementById('nome').value = nomeAtual;
             document.getElementById('senha').value = '';
-            document.getElementById('senha').placeholder = 'Digite nova senha (ou mantenha)';
+            document.getElementById('senha').placeholder = 'Nova senha (opcional)';
             
             document.getElementById('titulo-form').textContent = 'Editar Usuário';
-            document.getElementById('btn-salvar').textContent = 'Atualizar';
+            document.getElementById('btn-salvar').textContent = 'Atualizar Dados';
             document.getElementById('btn-cancelar').style.display = 'block';
         }
 
@@ -119,12 +318,11 @@
             document.getElementById('senha').value = '';
             document.getElementById('senha').placeholder = 'Digite a senha';
             
-            document.getElementById('titulo-form').textContent = 'Cadastrar Usuário';
+            document.getElementById('titulo-form').textContent = 'Novo Usuário';
             document.getElementById('btn-salvar').textContent = 'Salvar no Banco';
             document.getElementById('btn-cancelar').style.display = 'none';
         }
 
-        // Executa a listagem ao carregar a página
         carregarUsuarios();
     </script>
 
