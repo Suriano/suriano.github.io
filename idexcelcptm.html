@@ -142,8 +142,6 @@
                     <label for="selectTurno">Escolher Horário (Turno):</label>
                     <select id="selectTurno">
                         <option value="">Selecione o turno...</option>
-                        <option value="07h às 15h">07h às 15h</option>
-                        <option value="15h às 23h">15h às 23h</option>
                     </select>
                 </div>
             </div>
@@ -215,48 +213,57 @@
                 let currentStation = "";
                 let i = 0;
 
-                // Varre a planilha identificando os blocos de calendário por semana
                 while (i < rows.length) {
                     let row = rows[i];
-                    let val2 = Number(row[2]);
+                    let col0Text = String(row[0] || "").trim().toUpperCase();
                     
-                    // Se encontrou uma linha com número de dia na coluna 2 (ex: 10, 17, 24, 31)
-                    if (!isNaN(val2) && val2 >= 1 && val2 <= 31) {
-                        let days = [];
-                        for (let c = 2; c <= 8; c++) {
-                            days.push(rows[i][c]);
+                    if (col0Text.includes('DEJEM')) {
+                        let colIndices = [];
+                        for (let c = 2; c <= 9; c++) {
+                            let val = Number(row[c]);
+                            if (!isNaN(val) && val >= 1 && val <= 31) {
+                                colIndices.push(c);
+                            }
                         }
+
+                        if (colIndices.length === 0) {
+                            i++;
+                            continue;
+                        }
+
+                        let days = colIndices.map(c => row[c]);
+                        
                         let weekdays = [];
                         if (i + 1 < rows.length) {
-                            for (let c = 2; c <= 8; c++) {
-                                weekdays.push(rows[i+1][c]);
-                            }
+                            weekdays = colIndices.map(c => rows[i+1][c]);
                         }
                         
                         let j = i + 2;
                         while (j < rows.length) {
                             let sRow = rows[j];
-                            let sVal2 = Number(sRow[2]);
-                            if (!isNaN(sVal2) && sVal2 >= 1 && sVal2 <= 31) {
-                                break; // Chegou no próximo bloco de semana
+                            let sCol0 = String(sRow[0] || "").trim().toUpperCase();
+                            
+                            if (sCol0.includes('DEJEM')) {
+                                break; 
                             }
                             
-                            let col0 = String(sRow[0] || "").trim();
+                            if (sCol0 && sCol0 !== 'AISP' && !sCol0.includes('DISTRIBUIÇÃO')) {
+                                currentStation = sRow[0];
+                            }
+                            
                             let col1 = String(sRow[1] || "").trim();
-                            
-                            if (col0 && col0 !== 'AISP' && !col0.includes('DISTRIBUIÇÃO')) {
-                                currentStation = col0;
-                            }
-                            
-                            if (col1 === '07h às 15h' || col1 === '15h às 23h') {
+                            // Considera qualquer linha que tenha formato de horário/turno na coluna 1
+                            if (col1 !== '' && col1.toLowerCase().includes('às')) {
                                 let turno = col1;
                                 for (let idx = 0; idx < days.length; idx++) {
                                     let dVal = days[idx];
-                                    if (dVal !== "" && !isNaN(Number(dVal))) {
+                                    if (dVal !== "" && !isNaN(Number(dVal)) && Number(dVal) > 0) {
                                         let dayNum = Number(dVal);
                                         let weekday = weekdays[idx] || "";
-                                        let stationId = sRow[2 + idx];
-                                        if (stationId !== "" && stationId !== undefined && stationId !== null) {
+                                        let colIdx = colIndices[idx];
+                                        let stationId = sRow[colIdx];
+                                        
+                                        if (stationId !== "" && stationId !== undefined && stationId !== null && String(stationId).trim() !== "0") {
                                             dadosMesCompleto.push({
                                                 dia: dayNum,
                                                 semana: String(weekday).trim(),
@@ -284,6 +291,7 @@
 
                 filterSection.style.display = 'flex';
 
+                // Popula os Dias disponíveis
                 const diasUnicos = [...new Set(dadosMesCompleto.map(item => item.dia))].sort((a,b) => a - b);
                 selectDia.innerHTML = '<option value="">Selecione o dia...</option>';
                 diasUnicos.forEach(dia => {
@@ -293,6 +301,17 @@
                     selectDia.appendChild(opt);
                 });
 
+                // Popula dinamicamente os Turnos encontrados no arquivo
+                const turnosUnicos = [...new Set(dadosMesCompleto.map(item => item.turno))].sort();
+                selectTurno.innerHTML = '<option value="">Selecione o turno...</option>';
+                turnosUnicos.forEach(turno => {
+                    const opt = document.createElement('option');
+                    opt.value = turno;
+                    opt.textContent = turno;
+                    selectTurno.appendChild(opt);
+                });
+
+                selectDia.value = "";
                 selectTurno.value = "";
                 whatsappBoxTop.style.display = 'none';
                 actionButtons.style.display = 'none';
